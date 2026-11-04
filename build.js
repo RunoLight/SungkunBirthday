@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const dir = __dirname;
 const assets = {};
-for (const f of ['1.webp', '2.webp', '3.webp', '4.webp', '5.png', '6.png', '7.png']) {
+for (const f of ['1.webp', '2.webp', '3.webp', '4.webp', '5.png', '6.png', '7.png', '8.png']) {
   const b = fs.readFileSync(path.join(dir, 'assets', f));
   const [n, ext] = f.split('.');
   assets['p' + n] = 'data:image/' + ext + ';base64,' + b.toString('base64');

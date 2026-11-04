@@ -120,7 +120,7 @@
     <img id="tFace" class="bigface" alt="">
     <div class="hello">Привет, Sungkun! • 안녕! • Assalam-o-Alaikum!</div>
     <h1>SUNGKUN'S<br>BIRTHDAY DEFENSE</h1>
-    <div class="sub">Your cat <b>Gucci</b> has cloned himself into an army of <b>very loud</b> meowing creeps.<br>They want your <b>birthday cake</b>. Sung Min, Sung Jin, Vasily, Stitch and Grogu are here. Defend the cake!</div>
+    <div class="sub">Your cat <b>Gucci</b> has cloned himself into an army of <b>very loud</b> meowing creeps.<br>They want your <b>birthday cake</b>. Sung Min, Sung Jin, Vasily, Arina, Stitch and Grogu are here. Defend the cake!</div>
     <div class="team" id="team"></div>
     <div class="controls">
       <span><kbd>Right click</kbd></span><span>move / attack (just like Dota)</span>
@@ -560,7 +560,7 @@ const ABIL = {
 };
 
 const S = {};
-let player, allies = [], cats = [], projs = [], parts = [], floats = [], rings = [], helpers = [], decorCats = [];
+let player, allies = [], cats = [], projs = [], parts = [], floats = [], rings = [], helpers = [], decorCats = [], wards = [];
 let faces = {};
 
 function resetState() {
@@ -599,7 +599,7 @@ function makeHero(opts) {
   const h = {
     ...parts3d, name: opts.name, color: opts.color || '#fff', speed: opts.speed || 6, range: opts.range || 7, dmg: opts.dmg || 18,
     atkRate: opts.atkRate || 1, atkT: 0, projColor: opts.projColor || '#ffd23f', melee: !!opts.melee,
-    anchor: opts.anchor ? opts.anchor.clone() : V(), leash: opts.leash || 22, target: null, moveTo: null, isPlayer: !!opts.isPlayer,
+    anchor: opts.anchor ? opts.anchor.clone() : V(), support: !!opts.support, wardT: 1.5, leash: opts.leash || 22, target: null, moveTo: null, isPlayer: !!opts.isPlayer,
     walkT: Math.random() * 10, idleT: 0, hop: 0, quips: opts.quips || [],
   };
   h.root.position.copy(h.anchor);
@@ -620,6 +620,7 @@ function buildHeroes() {
     makeHero({ name: 'Sung Min', shirt: '#1d1d22', pants: '#2b2b33', face: faces.hyung, headSize: 1.9, scale: 1.08, speed: 6, range: 9, dmg: 22, atkRate: 1.1, projColor: '#4aa8ff', anchor: V(-9, 0, 3), nameTag: 'Sung Min (big bro)', tagColor: '#8fc6ff', quips: ['Hyung carry', 'Just farm, bro', 'ㅋㅋㅋ', 'Gucci, NO!'] }),
     makeHero({ name: 'Sung Jin', shirt: '#5f6b4a', pants: '#4d5540', face: faces.dong, headSize: 1.8, scale: 0.85, speed: 6.8, range: 8, dmg: 16, atkRate: 0.75, projColor: '#ffa53a', anchor: V(9, 0, 3), nameTag: 'Sung Jin (little bro)', tagColor: '#ffcf8f', quips: ['I need gold!', 'Sir, yes sir!', 'ㅋㅋㅋㅋ', 'Gucci stop!!'] }),
     makeHero({ name: 'Vasily', shirt: '#c62e2e', pants: '#2c3550', face: faces.vasya, headSize: 1.9, speed: 6.2, range: 8, dmg: 20, atkRate: 0.9, projColor: '#ff4d4d', anchor: V(0, 0, -9), nameTag: 'Vasily (Babushka)', tagColor: '#ff9a9a', quips: ['DAVAI DAVAI!', 'Blyat, cats!', 'PRIVET!', 'Babushka help!'] }),
+    makeHero({ name: 'Arina', shirt: '#f2f2f6', pants: '#e4e4ec', face: faces.arina, headSize: 1.9, scale: 0.9, speed: 7.5, anchor: V(-5, 0, -7), nameTag: 'Arina (pos 5)', tagColor: '#ffb3e1', support: true }),
     makeHero({ name: 'Stitch', stitch: true, speed: 9, range: 1.9, dmg: 26, atkRate: 0.55, melee: true, anchor: V(5, 0, -6), leash: 30, quips: ['Ohana!', 'Aloha!', 'Meega nala kweesta!'] }),
   ];
 }
@@ -921,7 +922,74 @@ function updatePlayer(dt) {
   const r = Math.hypot(h.root.position.x, h.root.position.z); if (r < 3.6) h.root.position.multiplyScalar(3.6 / r);
 }
 
+// ---------- Arina, the only person who buys wards ----------
+const WARD_LINES = [
+  'Ward placed. You\'re welcome.', 'Who bought wards? Me. Always me.', 'Nobody buys wards except me…',
+  'Rune spot: warded!', 'Sentry here, trust me', 'Pos 5 forever ;_;', 'Map awareness, boys!',
+  'Deward THIS, Gucci!', 'Gucci dewarded me!!', 'Sungkun, where is YOUR ward?!', 'Wards > items',
+  'I see you, Gucci 👀', '+1 ward, -50 gold, 0 thanks', 'Vision wins games!', 'Supp diff',
+  'Don\'t step on my ward!', 'This ward is for the cake', 'Observer up!', 'Ward stacked. Probably.',
+  'Hyung, buy a ward too!', 'Last ward in stock!', 'I am the minimap now',
+];
+const WARD_IDLE = ['Need more wards…', 'Running to the river', 'Where should I ward…', 'Shopping for wards 🛒', 'ward ward ward'];
+function makeWard(pos, sentry) {
+  const root = new THREE.Group();
+  const col = sentry ? '#4aa8ff' : '#ffd23f';
+  const stick = mesh(new THREE.CylinderGeometry(0.05, 0.08, 1.4, 6), std('#6b4a2f')); stick.position.y = 0.7; root.add(stick);
+  const base = mesh(new THREE.ConeGeometry(0.35, 0.3, 8), std('#4a3a2a')); base.position.y = 0.15; root.add(base);
+  const eye = new THREE.Group(); eye.position.y = 1.65; root.add(eye);
+  const ball = mesh(new THREE.SphereGeometry(0.32, 16, 12), std(col, { emissive: col, emissiveIntensity: 0.6, roughness: 0.3 })); eye.add(ball);
+  const iris = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), basic('#111111')); iris.position.z = 0.24; eye.add(iris);
+  const glow = new THREE.Mesh(new THREE.RingGeometry(5.6, 6, 48), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
+  glow.rotation.x = -Math.PI / 2; glow.position.y = 0.06; root.add(glow);
+  root.position.copy(pos); root.position.y = 0; scene.add(root);
+  burst(pos.clone().add(V(0, 1.5, 0)), [col, '#ffffff'], 12, 4, 0.6);
+  tone(sentry ? 990 : 1320, 0.15, 'sine', 0.08); tone(sentry ? 1320 : 1760, 0.2, 'sine', 0.06, 1, 0.08);
+  const w = { root, eye, glow, life: 25, zapT: 0.5, sentry, name: sentry ? "Arina's sentry" : "Arina's ward" };
+  wards.push(w);
+  if (wards.length > 6) { const old = wards.shift(); scene.remove(old.root); burst(old.root.position.clone().add(V(0, 1.5, 0)), ['#888888', '#ffffff'], 8, 3); }
+  return w;
+}
+function updateWards(dt) {
+  for (let i = wards.length - 1; i >= 0; i--) {
+    const w = wards[i]; w.life -= dt;
+    w.eye.position.y = 1.65 + Math.sin(S.t * 3 + i) * 0.08;
+    const c = nearestCat(w.root.position, 6);
+    if (c) { w.eye.lookAt(c.root.position.x, 1.65, c.root.position.z); w.zapT -= dt; if (w.zapT <= 0) { w.zapT = 1.1; shoot(w.root.position.clone().add(V(0, 1.7, 0)), c, 14, w.sentry ? '#4aa8ff' : '#ffd23f', { name: w.name }); } }
+    else w.eye.rotation.y += dt;
+    w.glow.material.opacity = w.life < 4 ? 0.35 * (Math.sin(S.t * 12) > 0 ? 1 : 0.2) : 0.35;
+    if (w.life <= 0) { scene.remove(w.root); wards.splice(i, 1); }
+  }
+}
+function updateArina(h, dt) {
+  let moving = false;
+  if (h.moveTo) {
+    const d = moveToward(h, h.moveTo, h.speed, dt); moving = true;
+    if (d < 0.2) {
+      h.moveTo = null; h.wardT = rand(1.5, 3);
+      const sentry = Math.random() < 0.35;
+      makeWard(h.root.position, sentry);
+      floatText(pick(WARD_LINES), h.root.position.clone().add(V(0, 4.3, 0)), sentry ? '#9cd0ff' : '#ffe27a', 0.65, 2.8, 0.5);
+      h.hop = 0.25;
+    }
+  } else {
+    h.wardT -= dt;
+    if (h.wardT <= 0) {
+      // pick a spot: preferably near where cats are coming from
+      const c = cats.find(c => c.alive && Math.random() < 0.3);
+      const a = c ? Math.atan2(c.root.position.z, c.root.position.x) + rand(-0.4, 0.4) : rand(0, TAU);
+      const r = rand(9, 22);
+      h.moveTo = V(Math.cos(a) * r, 0, Math.sin(a) * r);
+      if (Math.random() < 0.3) floatText(pick(WARD_IDLE), h.root.position.clone().add(V(0, 4.3, 0)), '#ffb3e1', 0.42, 1.8, 0.6);
+    }
+  }
+  animWalk(h, moving, dt, 1.3);
+  if (h.hop > 0) { h.hop -= dt; h.model.position.y += Math.sin((0.25 - h.hop) / 0.25 * Math.PI) * 0.5; }
+  const r = Math.hypot(h.root.position.x, h.root.position.z); if (r < 3.6) h.root.position.multiplyScalar(3.6 / r);
+}
+
 function updateAlly(h, dt) {
+  if (h.support) return updateArina(h, dt);
   if (h.target && (!h.target.alive || h.target.root.position.length() > h.leash + 6)) h.target = null;
   if (!h.target) { h.idleT -= dt; if (h.idleT <= 0) { h.idleT = 0.3; const c = nearestCat(h.root.position, 26); if (c && c.root.position.length() < h.leash + 4) h.target = c; } }
   let moving = false;
@@ -1156,6 +1224,7 @@ function loop() {
     }
     updatePlayer(dt);
     allies.forEach(a => updateAlly(a, dt));
+    updateWards(dt);
     for (const c of cats) updateCat(c, dt);
     separateCats();
     for (let i = cats.length - 1; i >= 0; i--) if (!cats[i].alive) cats.splice(i, 1);
@@ -1173,6 +1242,7 @@ function loop() {
 function clearWorld() {
   for (const arr of [cats, decorCats]) { arr.forEach(c => scene.remove(c.root)); arr.length = 0; }
   [...projs.map(p => p.m), ...parts.map(p => p.m), ...floats.map(f => f.s), ...rings.map(r => r.m), ...helpers.map(h => h.root)].forEach(o => scene.remove(o));
+  wards.forEach(w => scene.remove(w.root)); wards.length = 0;
   projs.length = parts.length = floats.length = rings.length = helpers.length = 0;
   if (player) scene.remove(player.root); allies.forEach(a => scene.remove(a.root));
   flames.forEach(f => f.visible = true);
@@ -1201,6 +1271,7 @@ async function boot() {
   faces.hyung = cropCanvas(IM.p6, 185, 215, 165, { ring: '#4aa8ff' });   // Sung Min (older)
   faces.dong = cropCanvas(IM.p5, 172, 190, 165, { ring: '#ffa53a' });    // Sung Jin (younger)
   faces.vasya = cropCanvas(IM.p7, 92, 100, 92, { ring: '#ff4d4d' });     // Vasily
+  faces.arina = cropCanvas(IM.p8, 58, 64, 62, { ring: '#ffb3e1' });      // Arina
   faces.babushka = cartoonFace({ hat: 'scarf', skin: '#f0c7a8', ring: null });
   makeTabby();
   buildWorld(); buildCake(); buildHUD(); resetState();
@@ -1223,6 +1294,7 @@ async function boot() {
     [faces.dong.toDataURL(), 'Sung Jin', 'Little brother'],
     [faces.vasya.toDataURL(), 'Vasily', '"Babushka". Davai davai!'],
     [stitchCanvas.toDataURL(), 'Stitch', 'Ohana means family'],
+    [faces.arina.toDataURL(), 'Arina', 'Support. Buys ALL the wards.'],
     [grogCanvas.toDataURL(), 'Grogu', 'Ultimate ability'],
     [cropCanvas(IM.p3, 370, 560, 330).toDataURL(), 'GUCCI', 'Enemy cat. Very loud.', true],
   ];
@@ -1243,7 +1315,7 @@ async function boot() {
 boot();
 
 // debug hooks for testing
-window.__game = { S, player: () => player, cam: camera, cats: () => cats, cast, win: () => { cats.forEach(c => { c.alive = false; scene.remove(c.root); }); cats.length = 0; S.queue = []; S.wave = WAVES.length - 1; }, wave: i => { S.queue = []; cats.forEach(c => { c.alive = false; scene.remove(c.root); }); cats.length = 0; startWave(i); } };
+window.__game = { S, player: () => player, allies: () => allies, cam: camera, cats: () => cats, cast, win: () => { cats.forEach(c => { c.alive = false; scene.remove(c.root); }); cats.length = 0; S.queue = []; S.wave = WAVES.length - 1; }, wave: i => { S.queue = []; cats.forEach(c => { c.alive = false; scene.remove(c.root); }); cats.length = 0; startWave(i); } };
 </script>
 </body>
 </html>
