@@ -1,0 +1,1249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sungkun's Birthday Defense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --gold:#ffd23f; --red:#ff4d4d; --green:#5ee36a; --blue:#4aa8ff; --ink:#0d0f17; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; overflow:hidden; background:#0d0f17; font-family:Nunito, system-ui, sans-serif; color:#fff; user-select:none; }
+  canvas { display:block; }
+  .hidden { display:none !important; }
+  .rf { font-family:"Russo One", Nunito, sans-serif; letter-spacing:.02em; }
+
+  /* ---------- overlays ---------- */
+  .screen { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:50; padding:16px;
+    background:radial-gradient(ellipse at top, #2a1f4a 0%, #0d0f17 70%); overflow:auto; }
+  .screen.trans { background:rgba(8,8,20,.55); }
+  .card { max-width:880px; width:100%; text-align:center; }
+  h1 { font-family:"Russo One"; font-size:clamp(30px,6vw,64px); margin:.1em 0; line-height:1.05;
+       background:linear-gradient(180deg,#fff2a8,#ffb300); -webkit-background-clip:text; background-clip:text; color:transparent;
+       filter:drop-shadow(0 4px 0 #6b2b00); }
+  .sub { font-size:clamp(15px,2.2vw,20px); opacity:.92; margin:.4em 0 1em; }
+  .hello { font-family:"Russo One"; font-size:clamp(16px,2.6vw,24px); color:#9fe7ff; }
+  .bigface { width:150px; height:150px; border-radius:50%; border:5px solid var(--gold); box-shadow:0 0 40px #ffb30088; object-fit:cover; animation:bob 2s ease-in-out infinite; }
+  @keyframes bob { 50% { transform:translateY(-8px) rotate(-3deg); } }
+  .team { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin:14px 0; }
+  .member { width:104px; font-size:12px; line-height:1.2; }
+  .member img { width:72px; height:72px; border-radius:50%; border:3px solid #fff3; background:#222; object-fit:cover; display:block; margin:0 auto 4px; }
+  .member.enemy img { border-color:var(--red); }
+  .member b { display:block; font-size:13px; }
+  .controls { display:inline-grid; grid-template-columns:auto auto; gap:4px 14px; text-align:left; background:#ffffff10; padding:12px 18px; border-radius:12px; font-size:14px; margin:6px 0 16px; }
+  kbd { font-family:"Russo One"; background:#fff; color:#111; border-radius:5px; padding:1px 7px; font-size:12px; box-shadow:0 2px 0 #999; }
+  .btn { font-family:"Russo One"; font-size:24px; padding:14px 40px; border:0; border-radius:14px; cursor:pointer; color:#2b1300;
+         background:linear-gradient(180deg,#ffe57a,#ff9d00); box-shadow:0 6px 0 #8a4300, 0 10px 30px #ff9d0066; transition:transform .08s; }
+  .btn:hover { transform:translateY(-2px) scale(1.03); }
+  .btn:active { transform:translateY(3px); box-shadow:0 2px 0 #8a4300; }
+  .btn.small { font-size:16px; padding:10px 22px; }
+
+  /* ---------- HUD ---------- */
+  #hud { position:fixed; inset:0; pointer-events:none; z-index:10; }
+  #top { position:absolute; top:10px; left:50%; transform:translateX(-50%); width:min(520px,calc(100% - 32px)); text-align:center; }
+  #waveLbl { font-family:"Russo One"; font-size:15px; text-shadow:0 2px 0 #000; margin-bottom:4px; }
+  .bar { position:relative; height:20px; background:#000a; border:2px solid #000; border-radius:6px; overflow:hidden; margin-bottom:6px; }
+  .bar > div { position:absolute; inset:0; width:100%; transition:width .15s; }
+  .bar > span { position:absolute; inset:0; font-size:12px; font-weight:800; line-height:16px; text-shadow:0 1px 2px #000; }
+  #cakeFill { background:linear-gradient(180deg,#ff9ec7,#e0458f); }
+  #bossFill { background:linear-gradient(180deg,#ff7b5a,#b3161b); }
+  #manaFill { background:linear-gradient(180deg,#6cc0ff,#1f5fd1); }
+  #feed { position:absolute; top:10px; right:12px; width:250px; font-size:13px; text-align:right; }
+  #feed div { background:#000a; margin-bottom:4px; padding:3px 8px; border-radius:5px; animation:fin .25s; }
+  #feed .k { color:var(--green); font-weight:800; } #feed .v { color:#ffb3b3; }
+  @keyframes fin { from { transform:translateX(30px); opacity:0; } }
+  #announce { position:absolute; top:22%; left:0; right:0; text-align:center; font-family:"Russo One"; font-size:clamp(28px,6vw,64px);
+    color:#ffcf3f; text-shadow:0 4px 0 #7a1d00, 0 0 30px #ff6a00; pointer-events:none; }
+  #announce small { display:block; font-family:Nunito; font-weight:800; font-size:clamp(14px,2vw,20px); color:#fff; text-shadow:0 2px 4px #000; margin-top:6px; }
+  .pop { animation:pop 2.2s ease-out forwards; }
+  @keyframes pop { 0% { transform:scale(2.4); opacity:0; } 12% { transform:scale(1); opacity:1; } 80% { opacity:1; } 100% { opacity:0; transform:scale(1.05); } }
+  #bottom { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; align-items:flex-end; gap:12px;
+    background:linear-gradient(180deg,#1b2233ee,#0b0f19ee); border:2px solid #3b4660; border-radius:16px; padding:10px 14px; pointer-events:auto; }
+  #portrait { width:84px; height:84px; border-radius:12px; overflow:hidden; border:3px solid var(--gold); flex:none; }
+  #portrait img { width:100%; height:100%; object-fit:cover; }
+  #mid { width:330px; }
+  #pname { font-family:"Russo One"; font-size:16px; margin-bottom:4px; text-align:left; }
+  #pname small { font-family:Nunito; font-size:12px; opacity:.7; margin-left:6px; }
+  #abilities { display:flex; gap:8px; }
+  .ab { position:relative; width:72px; height:72px; border-radius:10px; background:linear-gradient(160deg,#36415f,#151a28); border:2px solid #556;
+    display:flex; align-items:center; justify-content:center; font-size:34px; cursor:pointer; overflow:hidden; }
+  .ab:hover { border-color:var(--gold); }
+  .ab .key { position:absolute; top:2px; left:4px; font-family:"Russo One"; font-size:12px; color:#fff; text-shadow:0 1px 2px #000; }
+  .ab .cost { position:absolute; bottom:2px; right:4px; font-size:11px; font-weight:800; color:#8cc8ff; text-shadow:0 1px 2px #000; }
+  .ab .cd { position:absolute; inset:0; background:#000b; display:flex; align-items:center; justify-content:center; font-family:"Russo One"; font-size:22px; }
+  .ab.nomana { filter:saturate(.3) brightness(.7); }
+  .ab.flash { animation:abf .3s; } @keyframes abf { 50% { box-shadow:0 0 0 4px #fff inset; } }
+  #gold { font-family:"Russo One"; color:var(--gold); font-size:20px; text-shadow:0 2px 0 #000; min-width:90px; text-align:right; padding-bottom:4px; }
+  #tip { position:absolute; bottom:120px; left:50%; transform:translateX(-50%); background:#0b0f19f0; border:2px solid #556; border-radius:10px; padding:10px 14px; width:300px; font-size:14px; }
+  #tip b { font-family:"Russo One"; color:var(--gold); }
+  #hint { position:absolute; left:12px; bottom:12px; font-size:12px; opacity:.75; text-shadow:0 1px 2px #000; }
+  #mute { position:absolute; left:12px; top:12px; pointer-events:auto; background:#000a; border:0; color:#fff; font-size:20px; border-radius:8px; width:40px; height:40px; cursor:pointer; }
+
+  /* the cat who screams into your teamfight */
+  #scream { position:fixed; left:50%; bottom:0; transform:translate(-50%,110%); z-index:30; pointer-events:none; transition:transform .18s cubic-bezier(.2,1.6,.4,1); }
+  #scream.on { transform:translate(-50%,8%) rotate(-4deg); }
+  #scream img { height:min(78vh,720px); border-radius:28px 28px 0 0; box-shadow:0 0 80px #000; display:block; }
+  #scream div { position:absolute; top:6%; left:50%; transform:translateX(-50%) rotate(6deg); font-family:"Russo One"; font-size:clamp(40px,9vw,110px); color:#fff;
+    -webkit-text-stroke:4px #000; white-space:nowrap; animation:shake .08s infinite; }
+  @keyframes shake { 50% { transform:translateX(-52%) rotate(4deg) scale(1.04); } }
+
+  /* victory */
+  #win .card { background:#0009; border-radius:24px; padding:20px; backdrop-filter:blur(4px); }
+  .hb { font-family:"Russo One"; line-height:1.15; }
+  .hb .l1 { font-size:clamp(26px,5.5vw,56px); color:#ffde59; text-shadow:0 4px 0 #7a1d00; }
+  .hb .l2 { font-size:clamp(20px,3.6vw,36px); color:#9fe7ff; }
+  .hb .l3 { font-size:clamp(20px,3.6vw,36px); color:#b8ffa8; }
+  .hb .l4 { font-size:clamp(18px,3vw,30px); color:#ffb3e1; }
+  .polas { display:flex; justify-content:center; gap:10px; margin:14px 0; flex-wrap:wrap; }
+  .pola { background:#fff; padding:8px 8px 28px; border-radius:4px; box-shadow:0 8px 20px #0008; color:#222; font-size:13px; font-weight:800; width:150px; }
+  .pola img { width:134px; height:160px; object-fit:cover; display:block; margin-bottom:6px; }
+  .pola:nth-child(1){ transform:rotate(-6deg); } .pola:nth-child(2){ transform:rotate(3deg) translateY(-8px); } .pola:nth-child(3){ transform:rotate(-2deg); } .pola:nth-child(4){ transform:rotate(5deg); }
+  #blow { font-family:"Russo One"; font-size:clamp(18px,3vw,26px); color:#fff; animation:pulse 1s infinite; margin:10px 0; }
+  @keyframes pulse { 50% { opacity:.45; } }
+  #final { font-size:17px; line-height:1.5; }
+  #final .sig { font-family:"Russo One"; color:var(--gold); font-size:20px; margin-top:6px; }
+
+  @media (max-width: 640px) {
+    #mid { width:auto; } .ab { width:54px; height:54px; font-size:26px; } #portrait { width:56px; height:56px; }
+    #gold { min-width:0; font-size:15px; } #feed { width:170px; font-size:11px; } #hint { display:none; } #bottom { gap:8px; padding:8px; }
+  }
+</style>
+<script>/*__ASSETS__*/</script>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }</script>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="title" class="screen">
+  <div class="card">
+    <img id="tFace" class="bigface" alt="">
+    <div class="hello">Привет, Sungkun! • 안녕! • Assalam-o-Alaikum!</div>
+    <h1>SUNGKUN'S<br>BIRTHDAY DEFENSE</h1>
+    <div class="sub">Your cat <b>Gucci</b> has cloned himself into an army of <b>very loud</b> meowing creeps.<br>They want your <b>birthday cake</b>. Sung Min, Sung Jin, Vasily, Stitch and Grogu are here. Defend the cake!</div>
+    <div class="team" id="team"></div>
+    <div class="controls">
+      <span><kbd>Right click</kbd></span><span>move / attack (just like Dota)</span>
+      <span><kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd></span><span>abilities (hover icons for info)</span>
+      <span><kbd>Wheel</kbd></span><span>zoom &nbsp;·&nbsp; <kbd>M</kbd> mute</span>
+    </div><br>
+    <button class="btn" id="startBtn" disabled style="opacity:.6">LOADING…</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <button id="mute" title="Mute (M)">🔊</button>
+  <div id="top">
+    <div id="waveLbl" class="rf"></div>
+    <div class="bar" style="height:24px"><div id="cakeFill"></div><span id="cakeTxt" style="line-height:20px"></span></div>
+    <div class="bar hidden" id="bossBar"><div id="bossFill"></div><span>😾 GUCCI, THE ANNOYING ONE</span></div>
+  </div>
+  <div id="feed"></div>
+  <div id="announce"></div>
+  <div id="bottom">
+    <div id="portrait"><img id="pImg" alt=""></div>
+    <div id="mid">
+      <div id="pname">SUNGKUN <small>Birthday Boy · Carry</small></div>
+      <div class="bar"><div id="manaFill"></div><span id="manaTxt"></span></div>
+      <div id="abilities"></div>
+    </div>
+    <div id="gold">💰 <span id="goldN">0</span></div>
+  </div>
+  <div id="tip" class="hidden"></div>
+  <div id="hint">Right click to move · right click a cat to attack</div>
+</div>
+
+<div id="scream"><img id="screamImg" alt=""><div>MEEEOOOWWW!!!</div></div>
+
+<!-- LOSE -->
+<div id="lose" class="screen trans hidden">
+  <div class="card">
+    <h1>THE CAKE HAS FALLEN</h1>
+    <div class="sub">Gucci's army ate everything. Babushka is very disappointed.<br>But she already baked a new one. Davai, one more game!</div>
+    <button class="btn" id="retryBtn">DAVAI, AGAIN ▶</button>
+  </div>
+</div>
+
+<!-- WIN -->
+<div id="win" class="screen trans hidden">
+  <div class="card">
+    <div class="hb">
+      <div class="l1">С ДНЁМ РОЖДЕНИЯ, SUNGKUN!</div>
+      <div class="l2">생일 축하해! 🎉</div>
+      <div class="l3">سالگرہ مبارک · Saalgirah Mubarak!</div>
+      <div class="l4">HAPPY BIRTHDAY!</div>
+    </div>
+    <div class="polas" id="polas"></div>
+    <div id="blow">🎂 Make a wish and press SPACE to blow out the candles 🎂</div>
+    <div id="final" class="hidden">
+      Wish granted: <b>+25 MMR</b>, no more feeders, and every game a <b>RAMPAGE</b>.<br>
+      (Gucci will still meow during teamfights though. Some things never change.)<br>
+      Thanks for being an awesome friend and teammate. Davai davai, let's play more Dota!
+      <div class="sig">GG WP — your Russian friend ❤️ &nbsp; PAKA! 👋</div>
+      <br><button class="btn small" id="againBtn">Play again</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+// ====================================================================
+//  helpers
+// ====================================================================
+const $ = s => document.querySelector(s);
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[(Math.random() * a.length) | 0];
+const TAU = Math.PI * 2;
+const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+
+const IM = {};
+async function loadImages() {
+  for (const k of Object.keys(window.ASSETS || {})) {
+    const im = new Image();
+    await new Promise(res => { im.onload = res; im.onerror = res; im.src = window.ASSETS[k]; if (im.complete && im.naturalWidth) res(); });
+    IM[k] = im;
+  }
+}
+
+// circle-crop part of a photo into a canvas (optionally with cat ears)
+function cropCanvas(im, cx, cy, r, { size = 256, ring = null, rot = 0, ears = false } = {}) {
+  const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d');
+  const R = size / 2 * (ears ? 0.74 : 0.95), ox = size / 2, oy = ears ? size / 2 + size * 0.11 : size / 2;
+  if (ears) {
+    for (const s of [-1, 1]) {
+      g.fillStyle = '#3d3026';
+      g.beginPath(); g.moveTo(ox + s * R * 0.98, oy - R * 0.15); g.lineTo(ox + s * R * 0.85, oy - R * 1.38); g.lineTo(ox + s * R * 0.15, oy - R * 0.85); g.closePath(); g.fill();
+      g.fillStyle = '#e8a59b';
+      g.beginPath(); g.moveTo(ox + s * R * 0.8, oy - R * 0.4); g.lineTo(ox + s * R * 0.78, oy - R * 1.12); g.lineTo(ox + s * R * 0.4, oy - R * 0.8); g.closePath(); g.fill();
+    }
+  }
+  g.save(); g.beginPath(); g.arc(ox, oy, R, 0, TAU); g.clip();
+  g.translate(ox, oy); g.rotate(rot); const s = R / r;
+  g.drawImage(im, -cx * s, -cy * s, im.width * s, im.height * s); g.restore();
+  if (ring) { g.lineWidth = size * 0.04; g.strokeStyle = ring; g.beginPath(); g.arc(ox, oy, R - g.lineWidth / 2, 0, TAU); g.stroke(); }
+  return c;
+}
+
+// simple cartoon faces for the people we don't have photos of
+function cartoonFace({ skin = '#d8a57a', hair = '#16130f', hat = null, glasses = false, mouth = 'smile', ring = '#fff' } = {}) {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  const o = 128, R = 96;
+  if (hat === 'scarf') { g.fillStyle = '#c8202b'; g.beginPath(); g.arc(o, o + 6, R + 22, 0, TAU); g.fill();
+    g.fillStyle = '#ffd34d'; for (let i = 0; i < 14; i++) { const a = i / 14 * TAU; g.beginPath(); g.arc(o + Math.cos(a) * (R + 12), o + 6 + Math.sin(a) * (R + 12), 6, 0, TAU); g.fill(); } }
+  g.fillStyle = skin; g.beginPath(); g.arc(o, o + 6, R, 0, TAU); g.fill();
+  if (!hat || hat === 'cap') { g.fillStyle = hair; g.beginPath(); g.ellipse(o, o - 30, R + 4, 66, 0, Math.PI, TAU); g.fill();
+    g.beginPath(); g.ellipse(o - 30, o - 40, 50, 30, 0.3, 0, TAU); g.fill(); g.beginPath(); g.ellipse(o + 36, o - 42, 46, 28, -0.4, 0, TAU); g.fill(); }
+  if (hat === 'cap') { g.fillStyle = '#e23b3b'; g.beginPath(); g.ellipse(o, o - 52, R, 54, 0, Math.PI, TAU); g.fill(); g.fillRect(o - 10, o - 58, 120, 18); }
+  if (hat === 'ushanka') {
+    g.fillStyle = '#6b5a4a'; g.beginPath(); g.ellipse(o, o - 46, R + 22, 70, 0, Math.PI, TAU); g.fill();
+    g.fillRect(o - R - 22, o - 50, 36, 100); g.fillRect(o + R - 14, o - 50, 36, 100);
+    g.fillStyle = '#8a7765'; g.fillRect(o - R - 10, o - 66, 2 * R + 20, 34);
+    g.fillStyle = '#e8c33a'; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 7 : 16; g.lineTo(o + Math.cos(a) * rr, o - 50 + Math.sin(a) * rr); } g.fill();
+  }
+  if (hat === 'scarf') { g.fillStyle = '#c8202b'; g.beginPath(); g.ellipse(o, o - 40, R + 10, 70, 0, Math.PI, TAU); g.fill();
+    g.fillStyle = '#d9d9d9'; g.fillRect(o - 60, o - 26, 120, 10); }
+  g.fillStyle = '#1b1b1b';
+  g.beginPath(); g.ellipse(o - 34, o + 12, 9, 13, 0, 0, TAU); g.fill();
+  g.beginPath(); g.ellipse(o + 34, o + 12, 9, 13, 0, 0, TAU); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(o - 31, o + 7, 3.5, 0, TAU); g.arc(o + 37, o + 7, 3.5, 0, TAU); g.fill();
+  if (glasses) { g.strokeStyle = '#222'; g.lineWidth = 5; g.beginPath(); g.arc(o - 34, o + 12, 22, 0, TAU); g.moveTo(o + 56, o + 12); g.arc(o + 34, o + 12, 22, 0, TAU); g.moveTo(o - 12, o + 10); g.lineTo(o + 12, o + 10); g.stroke(); }
+  g.fillStyle = '#ff8a8a88'; g.beginPath(); g.arc(o - 58, o + 40, 13, 0, TAU); g.arc(o + 58, o + 40, 13, 0, TAU); g.fill();
+  g.strokeStyle = '#5a2a1a'; g.lineWidth = 6; g.lineCap = 'round'; g.beginPath();
+  if (mouth === 'smile') g.arc(o, o + 40, 22, 0.2, Math.PI - 0.2); else { g.moveTo(o - 14, o + 54); g.lineTo(o + 14, o + 54); }
+  g.stroke();
+  if (ring) { g.strokeStyle = ring; g.lineWidth = 8; g.beginPath(); g.arc(o, o + 6, R + (hat === 'scarf' ? 24 : 2), 0, TAU); g.stroke(); }
+  return c;
+}
+
+const texCache = new Map();
+function tex(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+
+function textCanvas(text, { size = 64, color = '#fff', stroke = '#000', pad = 14 } = {}) {
+  const c = document.createElement('canvas'); const g = c.getContext('2d');
+  const font = `${size}px "Russo One", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`;
+  g.font = font; const w = Math.ceil(g.measureText(text).width) + pad * 2;
+  c.width = w; c.height = Math.ceil(size * 1.35) + pad;
+  g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+  g.lineWidth = size * 0.18; g.strokeStyle = stroke; g.strokeText(text, w / 2, c.height / 2);
+  g.fillStyle = color; g.fillText(text, w / 2, c.height / 2);
+  return c;
+}
+function textSprite(text, opts = {}, h = 1) {
+  const key = text + '|' + (opts.color || '') + '|' + (opts.size || '');
+  let entry = texCache.get(key);
+  if (!entry) { const c = textCanvas(text, opts); entry = { t: tex(c), ar: c.width / c.height }; texCache.set(key, entry); }
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: entry.t, transparent: true, depthTest: false }));
+  s.scale.set(h * entry.ar, h, 1); s.renderOrder = 20; s.userData.h = h; s.userData.ar = entry.ar;
+  return s;
+}
+
+// ====================================================================
+//  audio (all synthesized — no files needed)
+// ====================================================================
+let AC = null, master = null, muted = false;
+function initAudio() {
+  if (AC) return;
+  AC = new (window.AudioContext || window.webkitAudioContext)();
+  master = AC.createGain(); master.gain.value = 0.55; master.connect(AC.destination);
+}
+let lastMeows = [];
+function meow(vol = 0.25, pitch = 1, len = 0.6) {
+  if (!AC || muted) return;
+  const now = AC.currentTime; lastMeows = lastMeows.filter(t => now - t < 0.35);
+  if (lastMeows.length >= 3) return; lastMeows.push(now);
+  const t = now + 0.01, base = 520 * pitch * rand(0.85, 1.15);
+  const o = AC.createOscillator(), o2 = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain();
+  o.type = 'sawtooth'; o2.type = 'square';
+  for (const osc of [o, o2]) {
+    osc.frequency.setValueAtTime(base * 0.75, t);
+    osc.frequency.linearRampToValueAtTime(base * 1.35, t + len * 0.3);
+    osc.frequency.linearRampToValueAtTime(base * 0.6, t + len);
+  }
+  o2.detune.value = 8;
+  f.type = 'bandpass'; f.Q.value = 2.5;
+  f.frequency.setValueAtTime(700, t); f.frequency.linearRampToValueAtTime(2600, t + len * 0.35); f.frequency.linearRampToValueAtTime(800, t + len);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.05); g.gain.setValueAtTime(vol, t + len * 0.7); g.gain.linearRampToValueAtTime(0, t + len);
+  o.connect(f); o2.connect(f); f.connect(g); g.connect(master);
+  o.start(t); o2.start(t); o.stop(t + len + 0.05); o2.stop(t + len + 0.05);
+}
+function tone(freq, dur = 0.12, type = 'square', vol = 0.12, slide = 0, when = 0) {
+  if (!AC || muted) return;
+  const t = AC.currentTime + when, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * slide), t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur = 0.3, vol = 0.3, freq = 800) {
+  if (!AC || muted) return;
+  const t = AC.currentTime, len = Math.floor(AC.sampleRate * dur), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = buf; f.type = 'lowpass'; f.frequency.value = freq; g.gain.value = vol;
+  s.connect(f); f.connect(g); g.connect(master); s.start(t);
+}
+const sfx = {
+  shoot: () => tone(rand(600, 760), 0.07, 'triangle', 0.05, 0.6),
+  hit: () => tone(rand(180, 240), 0.06, 'square', 0.04, 0.5),
+  kill: () => { tone(880, 0.08, 'square', 0.06); tone(1320, 0.12, 'square', 0.05, 1, 0.07); },
+  boom: () => { noise(0.6, 0.6, 600); tone(110, 0.5, 'sine', 0.4, 0.3); },
+  heal: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.2, 'triangle', 0.08, 1, i * 0.08)),
+  force: () => { tone(90, 2.2, 'sawtooth', 0.12, 3); tone(180, 2.2, 'sine', 0.12, 2.5); },
+  speed: () => [400, 600, 800, 1200].forEach((f, i) => tone(f, 0.09, 'square', 0.06, 1, i * 0.05)),
+  nomana: () => { tone(220, 0.15, 'square', 0.07); tone(180, 0.2, 'square', 0.07, 1, 0.15); },
+  wave: () => [392, 523, 659].forEach((f, i) => tone(f, 0.3, 'sawtooth', 0.06, 1, i * 0.12)),
+  bite: () => tone(rand(140, 180), 0.08, 'sawtooth', 0.04, 0.4),
+};
+// Happy Birthday (traditional melody, public domain) as a little music box
+function playHappyBirthday() {
+  if (!AC || muted) return;
+  const N = { G4: 392, A4: 440, B4: 494, C5: 523, D5: 587, E5: 659, F5: 698, G5: 784 };
+  const song = [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2],
+    ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2],
+    ['G4', .75], ['G4', .25], ['G5', 1], ['E5', 1], ['C5', 1], ['B4', 1], ['A4', 2],
+    ['F5', .75], ['F5', .25], ['E5', 1], ['C5', 1], ['D5', 1], ['C5', 3]];
+  let t = 0.1; const beat = 0.42;
+  for (const [n, d] of song) { tone(N[n], d * beat * 1.4, 'triangle', 0.16, 1, t); tone(N[n] * 2, d * beat, 'sine', 0.05, 1, t); t += d * beat; }
+}
+// text-to-speech in Russian/Korean if the browser has those voices
+function say(text, lang = 'ru-RU', rate = 1.1, pitch = 1.1) {
+  try {
+    if (muted || !window.speechSynthesis) return;
+    const voices = speechSynthesis.getVoices();
+    const v = voices.find(v => v.lang === lang) || voices.find(v => v.lang && v.lang.startsWith(lang.slice(0, 2)));
+    if (!v) return;
+    const u = new SpeechSynthesisUtterance(text); u.voice = v; u.lang = v.lang; u.rate = rate; u.pitch = pitch; u.volume = 1;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch (e) { /* ignore */ }
+}
+try { speechSynthesis.getVoices(); } catch (e) { }
+
+// ====================================================================
+//  renderer / scene
+// ====================================================================
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#8fd0ff');
+scene.fog = new THREE.Fog('#8fd0ff', 70, 140);
+const camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 0.1, 400);
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+scene.add(new THREE.HemisphereLight('#e6f6ff', '#4d6e2c', 1.15));
+const sun = new THREE.DirectionalLight('#fff3dc', 2.3);
+sun.position.set(25, 45, 18); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -50, right: 50, top: 50, bottom: -50, near: 1, far: 140 });
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+
+const matCache = new Map();
+const std = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.8, ...extra });
+const basic = color => { if (!matCache.has(color)) matCache.set(color, new THREE.MeshBasicMaterial({ color })); return matCache.get(color); };
+function mesh(geo, mat, shadow = true) { const m = new THREE.Mesh(geo, mat); m.castShadow = shadow; m.receiveShadow = shadow; return m; }
+
+// ---------- world ----------
+function buildWorld() {
+  // grass
+  const gc = document.createElement('canvas'); gc.width = gc.height = 512; const g = gc.getContext('2d');
+  g.fillStyle = '#6fbf4a'; g.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 3000; i++) { g.fillStyle = pick(['#64b141', '#7ccb55', '#5aa83a', '#86d35f']); g.fillRect(Math.random() * 512, Math.random() * 512, rand(2, 6), rand(2, 6)); }
+  const gt = tex(gc); gt.wrapS = gt.wrapT = THREE.RepeatWrapping; gt.repeat.set(14, 14);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshStandardMaterial({ map: gt, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+  // the river (it's Dota, there has to be a river)
+  const river = new THREE.Mesh(new THREE.PlaneGeometry(9, 200), new THREE.MeshStandardMaterial({ color: '#4aa6dc', roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.9 }));
+  river.rotation.x = -Math.PI / 2; river.rotation.z = Math.PI / 4; river.position.y = 0.03; river.receiveShadow = true; scene.add(river);
+  // stone platform for the cake
+  const plat = mesh(new THREE.CylinderGeometry(6.5, 7, 0.5, 40), std('#b9b2a6')); plat.position.y = 0.25; scene.add(plat);
+  const plat2 = mesh(new THREE.CylinderGeometry(5.2, 5.2, 0.12, 40), std('#e8d9b9')); plat2.position.y = 0.55; scene.add(plat2);
+
+  // trees (instanced)
+  const N = 260, trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.25, 0.35, 1.6, 6), std('#7a5434'), N);
+  const leaf1 = new THREE.InstancedMesh(new THREE.ConeGeometry(1.6, 3, 7), std('#2f7d3a'), N);
+  const leaf2 = new THREE.InstancedMesh(new THREE.ConeGeometry(1.15, 2.3, 7), std('#3c9a46'), N);
+  [trunk, leaf1, leaf2].forEach(m => { m.castShadow = true; m.receiveShadow = true; });
+  const d = new THREE.Object3D();
+  for (let i = 0; i < N; i++) {
+    let a, r, x, z;
+    do { a = Math.random() * TAU; r = i < 40 ? rand(26, 34) : rand(34, 75); x = Math.cos(a) * r; z = Math.sin(a) * r; }
+    while (Math.abs(x + z) / Math.SQRT2 < 7); // keep the river clear
+    const s = rand(0.8, 1.5);
+    d.position.set(x, 0.8 * s, z); d.scale.setScalar(s); d.rotation.y = rand(0, TAU); d.updateMatrix(); trunk.setMatrixAt(i, d.matrix);
+    d.position.y = 2.6 * s; d.updateMatrix(); leaf1.setMatrixAt(i, d.matrix);
+    d.position.y = 3.9 * s; d.updateMatrix(); leaf2.setMatrixAt(i, d.matrix);
+  }
+  scene.add(trunk, leaf1, leaf2);
+
+  // rocks & flowers
+  for (let i = 0; i < 40; i++) {
+    const a = Math.random() * TAU, r = rand(10, 30);
+    const rock = mesh(new THREE.DodecahedronGeometry(rand(0.3, 0.8)), std('#8d8f96'));
+    rock.position.set(Math.cos(a) * r, 0.2, Math.sin(a) * r); rock.rotation.set(rand(0, 3), rand(0, 3), 0); scene.add(rock);
+  }
+  for (let i = 0; i < 160; i++) {
+    const a = Math.random() * TAU, r = rand(8, 32);
+    const f = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 4), basic(pick(['#ff6fa5', '#fff36b', '#ffffff', '#b98cff'])));
+    f.position.set(Math.cos(a) * r, 0.12, Math.sin(a) * r); scene.add(f);
+  }
+}
+
+// ---------- cake (the Ancient) ----------
+const CAKE_R = 4.2;
+let cake, flames = [], cakeLight, balloons = [];
+function buildCake() {
+  cake = new THREE.Group(); cake.position.y = 0.6; scene.add(cake);
+  const tiers = [[3, 1.5, '#ff9ec7'], [2.2, 1.25, '#fff4e6'], [1.45, 1.0, '#7a4a2a']];
+  let y = 0;
+  for (const [r, h, c] of tiers) {
+    const t = mesh(new THREE.CylinderGeometry(r, r, h, 40), std(c, { roughness: 0.6 })); t.position.y = y + h / 2; cake.add(t);
+    const icing = mesh(new THREE.TorusGeometry(r, 0.14, 8, 40), std('#ffffff', { roughness: 0.4 })); icing.rotation.x = Math.PI / 2; icing.position.y = y + h; cake.add(icing);
+    for (let i = 0; i < 14; i++) { const a = i / 14 * TAU; const dot = mesh(new THREE.SphereGeometry(0.12, 8, 6), basic(pick(['#ff4d6d', '#ffd23f', '#5ee36a', '#4aa8ff']))); dot.position.set(Math.cos(a) * r, y + h * 0.5, Math.sin(a) * r); cake.add(dot); }
+    y += h;
+  }
+  const fc = document.createElement('canvas'); fc.width = fc.height = 64; const g = fc.getContext('2d');
+  const grd = g.createRadialGradient(32, 40, 2, 32, 36, 30); grd.addColorStop(0, '#fff'); grd.addColorStop(0.3, '#ffe066'); grd.addColorStop(0.7, '#ff8a00aa'); grd.addColorStop(1, '#ff000000');
+  g.fillStyle = grd; g.fillRect(0, 0, 64, 64); const ft = tex(fc);
+  const stripes = ['#4aa8ff', '#ff6fa5', '#ffd23f', '#5ee36a'];
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9 * TAU, r = i === 8 ? 0 : 0.95;
+    const cnd = mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.8, 8), std(stripes[i % 4])); cnd.position.set(Math.cos(a) * r, y + 0.4, Math.sin(a) * r); cake.add(cnd);
+    const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: ft, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    fl.position.set(cnd.position.x, y + 1.0, cnd.position.z); fl.scale.set(0.45, 0.6, 1); cake.add(fl); flames.push(fl);
+  }
+  cakeLight = new THREE.PointLight('#ffb347', 6, 12); cakeLight.position.y = y + 1.5; cake.add(cakeLight);
+  // banner
+  const banner = textSprite('HAPPY BIRTHDAY SUNGKUN!', { size: 72, color: '#ffd23f', stroke: '#7a1d00' }, 1.4);
+  banner.position.set(0, 7.5, 0); cake.add(banner); cake.userData.banner = banner;
+  // balloons
+  const bcol = ['#ff4d6d', '#4aa8ff', '#ffd23f', '#5ee36a', '#b98cff', '#ff9d00'];
+  for (let i = 0; i < 6; i++) {
+    const a = i / 6 * TAU + 0.3, grp = new THREE.Group();
+    const b = mesh(new THREE.SphereGeometry(0.55, 16, 12), std(bcol[i], { roughness: 0.25 }), false); b.scale.y = 1.2; b.position.y = 5;
+    const str = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 4.4, 3), basic('#ffffff')); str.position.y = 2.6;
+    grp.add(b, str); grp.position.set(Math.cos(a) * 6, 0.5, Math.sin(a) * 6); scene.add(grp); balloons.push(grp);
+  }
+}
+
+// ---------- character models ----------
+function makeHumanoid({ shirt, pants, face, headSize = 1.8, cape = false, scale = 1, nameTag = null, tagColor = '#fff' }) {
+  const root = new THREE.Group(), model = new THREE.Group(); root.add(model);
+  const legs = [], arms = [];
+  for (const s of [-1, 1]) {
+    const leg = mesh(new THREE.CylinderGeometry(0.17, 0.14, 0.9, 8), std(pants)); leg.geometry.translate(0, -0.45, 0); leg.position.set(s * 0.22, 0.9, 0); model.add(leg); legs.push(leg);
+    const arm = mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.85, 8), std(shirt)); arm.geometry.translate(0, -0.42, 0); arm.position.set(s * 0.55, 1.85, 0); arm.rotation.z = s * 0.15; model.add(arm); arms.push(arm);
+  }
+  const torso = mesh(new THREE.CylinderGeometry(0.45, 0.5, 1.05, 12), std(shirt)); torso.position.y = 1.42; model.add(torso);
+  if (cape) {
+    const c = mesh(new THREE.CylinderGeometry(0.55, 1.0, 1.7, 18, 1, true, Math.PI / 2 - 0.35, Math.PI + 0.7), std('#efe5cc', { side: THREE.DoubleSide }));
+    c.position.y = 1.15; model.add(c);
+  }
+  const head = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(face), transparent: true }));
+  head.scale.set(headSize, headSize, 1); head.position.y = 1.95 + headSize * 0.42; root.add(head);
+  if (nameTag) { const tg = textSprite(nameTag, { size: 44, color: tagColor }, 0.45); tg.position.y = head.position.y + headSize * 0.62; root.add(tg); }
+  const sh = new THREE.Mesh(new THREE.CircleGeometry(0.6, 16), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.25 }));
+  sh.rotation.x = -Math.PI / 2; sh.position.y = 0.04; root.add(sh);
+  root.scale.setScalar(scale);
+  return { root, model, legs, arms, head };
+}
+
+function makeGrogu(s = 1) {
+  const g = new THREE.Group(), skin = std('#9cc786');
+  const robe = mesh(new THREE.ConeGeometry(0.55, 1.1, 14), std('#c9b28a')); robe.position.y = 0.55; g.add(robe);
+  const head = mesh(new THREE.SphereGeometry(0.48, 20, 16), skin); head.position.y = 1.35; head.scale.set(1.1, 0.95, 1); g.add(head);
+  for (const sd of [-1, 1]) {
+    const ear = mesh(new THREE.ConeGeometry(0.2, 1.0, 10), skin); ear.rotation.z = sd * -1.45; ear.position.set(sd * 0.85, 1.42, 0); ear.scale.z = 0.4; g.add(ear);
+    const eye = mesh(new THREE.SphereGeometry(0.13, 12, 10), std('#111', { roughness: 0.15 })); eye.position.set(sd * 0.2, 1.4, 0.4); g.add(eye);
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 6), basic('#fff')); hl.position.set(sd * 0.2 + 0.04, 1.45, 0.52); g.add(hl);
+  }
+  g.scale.setScalar(s); return g;
+}
+
+function makeStitch() {
+  const root = new THREE.Group(), model = new THREE.Group(); root.add(model);
+  const blue = std('#3f74d6'), light = std('#9cc8ff'), dark = std('#1b2f63');
+  const body = mesh(new THREE.SphereGeometry(0.5, 16, 12), blue); body.scale.set(1, 1.1, 0.9); body.position.y = 0.75; model.add(body);
+  const belly = mesh(new THREE.SphereGeometry(0.35, 14, 10), light); belly.position.set(0, 0.7, 0.25); belly.scale.set(1, 1.1, 0.6); model.add(belly);
+  const head = mesh(new THREE.SphereGeometry(0.62, 18, 14), blue); head.position.y = 1.6; head.scale.set(1.15, 0.9, 1); model.add(head);
+  const legs = [], arms = [];
+  for (const s of [-1, 1]) {
+    const ear = mesh(new THREE.ConeGeometry(0.3, 1.1, 10), blue); ear.scale.z = 0.25; ear.rotation.z = s * -1.1; ear.position.set(s * 0.95, 1.95, -0.1); model.add(ear);
+    const inner = mesh(new THREE.ConeGeometry(0.18, 0.8, 8), std('#e889b4')); inner.scale.z = 0.2; inner.rotation.z = s * -1.1; inner.position.set(s * 0.95, 1.95, -0.02); model.add(inner);
+    const eye = mesh(new THREE.SphereGeometry(0.17, 12, 10), std('#0d1424', { roughness: 0.1 })); eye.scale.set(1, 1.2, 0.6); eye.position.set(s * 0.27, 1.7, 0.5); model.add(eye);
+    const leg = mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.45, 8), blue); leg.geometry.translate(0, -0.22, 0); leg.position.set(s * 0.25, 0.45, 0); model.add(leg); legs.push(leg);
+    const arm = mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.6, 8), blue); arm.geometry.translate(0, -0.3, 0); arm.position.set(s * 0.5, 1.0, 0.05); arm.rotation.z = s * 0.4; model.add(arm); arms.push(arm);
+  }
+  const nose = mesh(new THREE.SphereGeometry(0.16, 12, 10), dark); nose.position.set(0, 1.5, 0.6); nose.scale.set(1.3, 0.8, 0.8); model.add(nose);
+  const tg = textSprite('Stitch (626)', { size: 44, color: '#9cc8ff' }, 0.45); tg.position.y = 3.0; root.add(tg);
+  return { root, model, legs, arms };
+}
+
+let tabbyTex;
+function makeTabby() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');
+  g.fillStyle = '#7d6a55'; g.fillRect(0, 0, 256, 128);
+  for (let i = 0; i < 2500; i++) { g.fillStyle = pick(['#8c7860', '#6b5947', '#9b8770', '#5c4c3d']); g.fillRect(Math.random() * 256, Math.random() * 128, 2, 4); }
+  g.fillStyle = '#2b221b';
+  for (let x = 0; x < 256; x += 22) { g.beginPath(); g.moveTo(x, 0); for (let y = 0; y <= 128; y += 8) g.lineTo(x + Math.sin(y * 0.09 + x) * 5, y); g.lineTo(x + 8, 128); for (let y = 128; y >= 0; y -= 8) g.lineTo(x + 8 + Math.sin(y * 0.09 + x) * 5, y); g.fill(); }
+  tabbyTex = tex(c); tabbyTex.wrapS = tabbyTex.wrapT = THREE.RepeatWrapping;
+}
+
+// ====================================================================
+//  game state
+// ====================================================================
+const CAT_TYPES = {
+  cat:      { hp: 70,   speed: 3.3, dmg: 10, scale: 1.0, gold: 15, name: 'Gucci clone' },
+  kitten:   { hp: 35,   speed: 5.6, dmg: 5,  scale: 0.62, gold: 10, name: 'Gucci kitten' },
+  screamer: { hp: 170,  speed: 2.5, dmg: 15, scale: 1.35, gold: 40, name: 'Screamer Gucci' },
+  boss:     { hp: 3800, speed: 1.15, dmg: 45, scale: 3.4, gold: 500, name: 'GUCCI, THE ANNOYING ONE' },
+};
+const WAVES = [
+  { title: 'WAVE 1', sub: 'Gucci is hungry. Protect the cake!', spawns: [['cat', 8]], interval: 1.3 },
+  { title: 'WAVE 2', sub: 'Kittens! Small, fast and extremely rude.', spawns: [['cat', 10], ['kitten', 8]], interval: 0.9 },
+  { title: 'WAVE 3', sub: 'Screamer Guccis — they meow right in the middle of your teamfight', spawns: [['cat', 12], ['kitten', 8], ['screamer', 3]], interval: 0.8 },
+  { title: 'WAVE 4', sub: 'Davai davai, it\'s getting serious', spawns: [['cat', 16], ['kitten', 14], ['screamer', 5]], interval: 0.6 },
+  { title: 'FINAL WAVE', sub: 'GUCCI, THE ANNOYING ONE, has woken up. He is hungry. He is LOUD.', spawns: [['cat', 12], ['kitten', 12], ['screamer', 3]], interval: 1.0, boss: true },
+];
+const ABIL = {
+  Q: { icon: '⚡', name: 'DAVAI DAVAI', cd: 10, mana: 40, desc: 'Russian motivation. +80% move speed and triple attack speed for 5 seconds.' },
+  W: { icon: '💥', name: 'NAHOY!', cd: 7, mana: 60, desc: 'Politely asks every cat nearby to leave. They fly. Very far.' },
+  E: { icon: '👵', name: 'BABUSHKA', cd: 20, mana: 90, desc: 'Babushka arrives: fixes the cake (+250) and throws hot pirozhki at cats for 10s.' },
+  R: { icon: '🟢', name: 'GROGU FORCE', cd: 30, mana: 150, desc: 'Grogu lifts every cat on the map with the Force, then drops them. 220 damage.' },
+};
+
+const S = {};
+let player, allies = [], cats = [], projs = [], parts = [], floats = [], rings = [], helpers = [], decorCats = [];
+let faces = {};
+
+function resetState() {
+  Object.assign(S, {
+    running: false, over: false, won: false, wave: -1, queue: [], spawnT: 0, betweenT: 0,
+    cakeHp: 1500, cakeMax: 1500, gold: 0, kills: 0, multi: 0, multiT: 0, firstBlood: false,
+    mana: 300, manaMax: 300, cds: { Q: 0, W: 0, E: 0, R: 0 }, buff: 0, shake: 0, zoom: 0.8, boss: null, t: 0,
+    blown: false, winT: 0,
+  });
+}
+
+// ---------- particles / effects ----------
+const partGeo = new THREE.BoxGeometry(0.16, 0.16, 0.16);
+function burst(pos, color, n = 10, spd = 5, life = 0.8, size = 1, grav = 14) {
+  for (let i = 0; i < n; i++) {
+    const m = new THREE.Mesh(partGeo, basic(Array.isArray(color) ? pick(color) : color));
+    m.position.copy(pos); m.scale.setScalar(size * rand(0.6, 1.3)); m.rotation.set(rand(0, 3), rand(0, 3), 0); scene.add(m);
+    const v = V(rand(-1, 1), rand(0.3, 1.4), rand(-1, 1)).normalize().multiplyScalar(spd * rand(0.4, 1));
+    parts.push({ m, v, life, max: life, grav, s: m.scale.x });
+  }
+}
+function floatText(text, pos, color = '#fff', h = 0.7, life = 1.1, vy = 2.2) {
+  const s = textSprite(text, { size: 64, color }, h); s.position.copy(pos); scene.add(s);
+  floats.push({ s, life, max: life, vy });
+}
+function ring(pos, color, maxR = 8, life = 0.5) {
+  const m = new THREE.Mesh(new THREE.RingGeometry(0.8, 1, 48), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.copy(pos); m.position.y = 0.2; scene.add(m);
+  rings.push({ m, life, max: life, maxR });
+}
+
+// ---------- heroes ----------
+function makeHero(opts) {
+  const parts3d = opts.stitch ? makeStitch() : makeHumanoid(opts);
+  scene.add(parts3d.root);
+  const h = {
+    ...parts3d, name: opts.name, color: opts.color || '#fff', speed: opts.speed || 6, range: opts.range || 7, dmg: opts.dmg || 18,
+    atkRate: opts.atkRate || 1, atkT: 0, projColor: opts.projColor || '#ffd23f', melee: !!opts.melee,
+    anchor: opts.anchor ? opts.anchor.clone() : V(), leash: opts.leash || 22, target: null, moveTo: null, isPlayer: !!opts.isPlayer,
+    walkT: Math.random() * 10, idleT: 0, hop: 0, quips: opts.quips || [],
+  };
+  h.root.position.copy(h.anchor);
+  return h;
+}
+
+function buildHeroes() {
+  // Sungkun — photo face, cape (like the Grogu costume photo), little Grogu in the bag
+  player = makeHero({
+    name: 'Sungkun', isPlayer: true, shirt: '#3b2a22', pants: '#5d6040', face: faces.sung, headSize: 2.1, cape: true,
+    speed: 7.5, range: 8, dmg: 32, atkRate: 0.7, projColor: '#ffffff', anchor: V(0, 0, 7), nameTag: 'SUNGKUN', tagColor: '#ffd23f',
+  });
+  const bag = mesh(new THREE.BoxGeometry(0.45, 0.55, 0.15), std('#9a6236')); bag.position.set(0.15, 1.25, 0.5); player.model.add(bag);
+  const mini = makeGrogu(0.32); mini.position.set(0.15, 1.1, 0.52); player.model.add(mini);
+  const neck = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.035, 6, 20), std('#ffffff')); neck.rotation.x = Math.PI / 2 - 0.4; neck.position.set(0, 1.85, 0.08); player.model.add(neck);
+
+  allies = [
+    makeHero({ name: 'Sung Min', shirt: '#1d1d22', pants: '#2b2b33', face: faces.hyung, headSize: 1.9, scale: 1.08, speed: 6, range: 9, dmg: 22, atkRate: 1.1, projColor: '#4aa8ff', anchor: V(-9, 0, 3), nameTag: 'Sung Min (big bro)', tagColor: '#8fc6ff', quips: ['Hyung carry', 'Just farm, bro', 'ㅋㅋㅋ', 'Gucci, NO!'] }),
+    makeHero({ name: 'Sung Jin', shirt: '#5f6b4a', pants: '#4d5540', face: faces.dong, headSize: 1.8, scale: 0.85, speed: 6.8, range: 8, dmg: 16, atkRate: 0.75, projColor: '#ffa53a', anchor: V(9, 0, 3), nameTag: 'Sung Jin (little bro)', tagColor: '#ffcf8f', quips: ['I need gold!', 'Sir, yes sir!', 'ㅋㅋㅋㅋ', 'Gucci stop!!'] }),
+    makeHero({ name: 'Vasily', shirt: '#c62e2e', pants: '#2c3550', face: faces.vasya, headSize: 1.9, speed: 6.2, range: 8, dmg: 20, atkRate: 0.9, projColor: '#ff4d4d', anchor: V(0, 0, -9), nameTag: 'Vasily (Babushka)', tagColor: '#ff9a9a', quips: ['DAVAI DAVAI!', 'Blyat, cats!', 'PRIVET!', 'Babushka help!'] }),
+    makeHero({ name: 'Stitch', stitch: true, speed: 9, range: 1.9, dmg: 26, atkRate: 0.55, melee: true, anchor: V(5, 0, -6), leash: 30, quips: ['Ohana!', 'Aloha!', 'Meega nala kweesta!'] }),
+  ];
+}
+
+function makeCat(type, pos) {
+  const T = CAT_TYPES[type];
+  const root = new THREE.Group(), model = new THREE.Group(); root.add(model);
+  const fur = new THREE.MeshStandardMaterial({ map: tabbyTex, roughness: 0.95 });
+  const body = mesh(new THREE.SphereGeometry(0.5, 16, 12), fur); body.scale.set(0.8, 0.75, 1.45); body.position.y = 0.62; model.add(body);
+  const chest = mesh(new THREE.SphereGeometry(0.3, 12, 10), std('#f4efe6')); chest.position.set(0, 0.6, 0.45); chest.scale.set(1, 1, 0.6); model.add(chest);
+  const legs = [];
+  for (const [x, z] of [[-0.22, 0.42], [0.22, 0.42], [-0.22, -0.4], [0.22, -0.4]]) {
+    const l = mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.5, 6), fur); l.geometry.translate(0, -0.25, 0); l.position.set(x, 0.5, z); model.add(l); legs.push(l);
+    const paw = mesh(new THREE.SphereGeometry(0.1, 8, 6), std('#ffffff')); paw.position.y = -0.48; l.add(paw);
+  }
+  const tail = mesh(new THREE.CylinderGeometry(0.07, 0.05, 1.0, 6), fur); tail.geometry.translate(0, 0.5, 0); tail.position.set(0, 0.8, -0.65); tail.rotation.x = -0.7; model.add(tail);
+  const face = new THREE.Sprite(new THREE.SpriteMaterial({ map: type === 'boss' ? faces.bossT : faces.catT, transparent: true }));
+  face.scale.set(1.35, 1.35, 1); face.position.set(0, 1.35, 0.25); root.add(face);
+  if (type === 'screamer' || type === 'boss') {
+    const glow = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.95, 32), new THREE.MeshBasicMaterial({ color: '#ff3b3b', transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
+    glow.rotation.x = -Math.PI / 2; glow.position.y = 0.05; root.add(glow);
+  }
+  // hp bar
+  const barBg = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#111111', depthTest: false })); barBg.scale.set(1.1, 0.14, 1); barBg.position.y = 2.25; barBg.renderOrder = 15;
+  const bar = new THREE.Sprite(new THREE.SpriteMaterial({ color: type === 'boss' ? '#ff5a3a' : '#e83b3b', depthTest: false })); bar.center.set(0, 0.5); bar.scale.set(1.04, 0.1, 1); bar.position.set(-0.52, 2.25, 0); bar.renderOrder = 16;
+  if (type !== 'boss') root.add(barBg, bar); else bar.visible = false;
+  root.scale.setScalar(T.scale); root.position.copy(pos); scene.add(root);
+  const c = { type, T, root, model, legs, tail, face, bar, barBg, hp: T.hp, maxHp: T.hp, vel: V(), y: 0, vy: 0, stun: 0, lev: 0, levDmg: 0, atkT: rand(0, 1), meowT: rand(1, 6), walkT: Math.random() * 10, alive: true, hitT: 0, spawnT: 7, megaT: 10 };
+  cats.push(c);
+  return c;
+}
+
+// ====================================================================
+//  combat
+// ====================================================================
+const projGeo = new THREE.SphereGeometry(0.2, 10, 8);
+function shoot(from, cat, dmg, color, owner, big = false) {
+  const m = new THREE.Mesh(big ? new THREE.CapsuleGeometry(0.18, 0.25, 4, 8) : projGeo, basic(color));
+  m.position.copy(from); scene.add(m); projs.push({ m, target: cat, dmg, owner, speed: 22, last: cat.root.position.clone() });
+  sfx.shoot();
+}
+function damage(cat, amount, owner) {
+  if (!cat.alive) return;
+  cat.hp -= amount; cat.hitT = 0.12;
+  if (cat.hp <= 0) killCat(cat, owner);
+}
+const feedEl = $('#feed');
+function feed(html) {
+  const d = document.createElement('div'); d.innerHTML = html; feedEl.prepend(d);
+  while (feedEl.children.length > 6) feedEl.lastChild.remove();
+  setTimeout(() => d.remove(), 7000);
+}
+function announce(big, small = '', color) {
+  const a = $('#announce'); a.innerHTML = big + (small ? `<small>${small}</small>` : ''); a.style.color = color || '';
+  a.classList.remove('pop'); void a.offsetWidth; a.classList.add('pop');
+}
+function killCat(cat, owner) {
+  cat.alive = false;
+  const p = cat.root.position.clone(); p.y += 0.8 * cat.T.scale;
+  burst(p, ['#7d6a55', '#2b221b', '#ffffff', '#ffb3c8'], cat.type === 'boss' ? 80 : 14, cat.type === 'boss' ? 12 : 6, 0.9, cat.T.scale);
+  scene.remove(cat.root);
+  S.gold += cat.T.gold; S.kills++;
+  floatText('+' + cat.T.gold, p.clone().add(V(0, 0.8, 0)), '#ffd23f', 0.6);
+  sfx.kill();
+  const who = owner ? owner.name : 'Sungkun';
+  feed(`<span class="k">${who}</span> ⚔ <span class="v">${cat.T.name}</span>`);
+  if (cat.type === 'boss') { S.boss = null; $('#bossBar').classList.add('hidden'); announce('GUCCI IS SILENCED', 'for about five minutes…'); meow(0.5, 0.5, 1.4); }
+  if (owner && owner.isPlayer) {
+    if (!S.firstBlood) { S.firstBlood = true; announce('FIRST BLOOD!', 'Sungkun drew first meow'); }
+    S.multi = S.multiT > 0 ? S.multi + 1 : 1; S.multiT = 2.2;
+    const M = { 2: 'DOUBLE KILL', 3: 'TRIPLE KILL', 4: 'ULTRA KILL', 5: 'RAMPAGE!!!' };
+    if (S.multi >= 2) announce(M[Math.min(S.multi, 5)], S.multi >= 5 ? 'Sungkun is on a RAMPAGE!' : '', S.multi >= 5 ? '#ff4dd2' : undefined);
+    const pk = (S.pk = (S.pk || 0) + 1);
+    const SP = { 10: 'KILLING SPREE', 20: 'DOMINATING', 35: 'MEGA KILL', 50: 'UNSTOPPABLE', 70: 'GODLIKE', 90: 'BEYOND GODLIKE' };
+    if (SP[pk] && S.multi < 2) announce(SP[pk], `Sungkun has ${pk} kills`);
+  }
+}
+
+function nearestCat(pos, maxD) {
+  let best = null, bd = maxD * maxD;
+  for (const c of cats) { if (!c.alive) continue; const d = c.root.position.distanceToSquared(pos); if (d < bd) { bd = d; best = c; } }
+  return best;
+}
+
+// ====================================================================
+//  abilities
+// ====================================================================
+function cast(k) {
+  if (!S.running) return;
+  const A = ABIL[k];
+  if (S.cds[k] > 0) { sfx.nomana(); return; }
+  if (S.mana < A.mana) { sfx.nomana(); floatText('Not enough mana', player.root.position.clone().add(V(0, 4.5, 0)), '#8cc8ff', 0.55); return; }
+  S.mana -= A.mana; S.cds[k] = A.cd;
+  const el = document.querySelector(`.ab[data-k="${k}"]`); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  const pp = player.root.position;
+  if (k === 'Q') {
+    S.buff = 5; sfx.speed(); say('Давай, давай!');
+    floatText('DAVAI DAVAI!', pp.clone().add(V(0, 4.6, 0)), '#ff5a5a', 1.0, 1.4, 1.5);
+    ring(pp, '#ff4d4d', 4, 0.4);
+  }
+  if (k === 'W') {
+    sfx.boom(); say('Нахой!', 'ru-RU', 1.0, 0.8); S.shake = 0.5;
+    floatText('NAHOY!!', pp.clone().add(V(0, 4.6, 0)), '#ffdd33', 1.3, 1.3, 1.5);
+    ring(pp, '#fff3a0', 10, 0.45); ring(pp, '#ff9d00', 7, 0.6);
+    burst(pp.clone().add(V(0, 0.5, 0)), ['#ffe066', '#ff9d00', '#ffffff'], 30, 12, 0.6);
+    for (const c of cats) {
+      if (!c.alive) continue;
+      const d = c.root.position.clone().sub(pp); d.y = 0; const dist = d.length();
+      if (dist < 9.5) {
+        d.normalize(); const f = c.type === 'boss' ? 4 : 26;
+        c.vel.add(d.multiplyScalar(f)); c.vy = c.type === 'boss' ? 3 : rand(10, 15); c.stun = 1.0;
+        damage(c, 75, player);
+        if (c.alive && Math.random() < 0.5) floatText(pick(['MEOW?!', 'МЯУ?!', '야옹?!']), c.root.position.clone().add(V(0, 2.5, 0)), '#fff', 0.5);
+      }
+    }
+  }
+  if (k === 'E') {
+    sfx.heal(); say('Бабушка!');
+    const g = makeHumanoid({ shirt: '#5b3b72', pants: '#5b3b72', face: faces.babushka, headSize: 1.6, nameTag: 'Babushka', tagColor: '#ffb3e1' });
+    const skirt = mesh(new THREE.ConeGeometry(0.8, 1.3, 14), std('#7a4e94')); skirt.position.y = 0.65; g.model.add(skirt);
+    const pos = pp.clone().add(V(rand(-2, 2), 0, rand(-2, 2)));
+    g.root.position.copy(pos); scene.add(g.root);
+    burst(pos.clone().add(V(0, 1, 0)), ['#ffb3e1', '#ffffff', '#ffd23f'], 20, 6);
+    helpers.push({ kind: 'babushka', ...g, life: 10, atkT: 0.5, walkT: 0 });
+    const before = S.cakeHp; S.cakeHp = Math.min(S.cakeMax, S.cakeHp + 250);
+    floatText(`+${Math.round(S.cakeHp - before)} 🎂`, V(0, 6, 0), '#ff9ec7', 1.0, 1.6);
+    floatText('Babushka fixed the cake!', V(0, 7.2, 0), '#ffffff', 0.6, 1.8);
+  }
+  if (k === 'R') {
+    sfx.force(); S.shake = 0.3;
+    const gr = makeGrogu(1.8); gr.position.copy(pp).add(V(-2.6, 0, -1.2)); scene.add(gr);
+    const aura = new THREE.Mesh(new THREE.SphereGeometry(2.2, 20, 16), new THREE.MeshBasicMaterial({ color: '#7dff9a', transparent: true, opacity: 0.25, depthWrite: false }));
+    aura.position.y = 1.4; gr.add(aura);
+    helpers.push({ kind: 'grogu', root: gr, aura, life: 3.4, base: gr.position.y });
+    floatText('THE FORCE IS STRONG', pp.clone().add(V(0, 5.5, 0)), '#7dff9a', 1.0, 2.0, 1.0);
+    ring(pp, '#7dff9a', 30, 1.2);
+    for (const c of cats) if (c.alive) { c.lev = 2.8; c.levDmg = 220; c.stun = 3.2; }
+  }
+}
+
+// ====================================================================
+//  input
+// ====================================================================
+const raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(), groundPlane = new THREE.Plane(V(0, 1, 0), 0);
+function rayFromEvent(e) { mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); raycaster.setFromCamera(mouse, camera); }
+function command(e) {
+  if (!S.running) return;
+  rayFromEvent(e);
+  // pick a cat first (they are tall-ish, test distance from ray to their body)
+  let best = null, bd = Infinity;
+  for (const c of cats) {
+    if (!c.alive) continue;
+    const ctr = c.root.position.clone(); ctr.y += 0.9 * c.T.scale;
+    const d = raycaster.ray.distanceToPoint(ctr); const lim = 1.0 * c.T.scale + 0.3;
+    if (d < lim && d < bd) { bd = d; best = c; }
+  }
+  if (best) { player.target = best; player.moveTo = null; ring(best.root.position, '#ff3b3b', 1.6, 0.35); return; }
+  const p = V(); if (!raycaster.ray.intersectPlane(groundPlane, p)) return;
+  const lim = 70; p.x = THREE.MathUtils.clamp(p.x, -lim, lim); p.z = THREE.MathUtils.clamp(p.z, -lim, lim);
+  player.moveTo = p; player.target = null; ring(p, '#5ee36a', 1.4, 0.35);
+}
+renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+renderer.domElement.addEventListener('pointerdown', e => { if (e.button === 2 || e.button === 0) command(e); });
+let rDrag = false;
+renderer.domElement.addEventListener('pointerdown', e => { if (e.button === 2) rDrag = true; });
+addEventListener('pointerup', () => rDrag = false);
+renderer.domElement.addEventListener('pointermove', e => { if (rDrag && S.running && player.moveTo) { rayFromEvent(e); const p = V(); if (raycaster.ray.intersectPlane(groundPlane, p)) player.moveTo = p; } });
+addEventListener('wheel', e => { S.zoom = THREE.MathUtils.clamp(S.zoom + Math.sign(e.deltaY) * 0.1, 0.6, 1.6); }, { passive: true });
+const keys = {};
+addEventListener('keydown', e => {
+  const k = e.key.toUpperCase();
+  if (e.code === 'Space') { e.preventDefault(); if (S.won && !S.blown && S.winT > 1.2) blowCandles(); return; }
+  if (k === 'M') toggleMute();
+  if (e.code === 'KeyQ') cast('Q'); if (e.code === 'KeyW') cast('W'); if (e.code === 'KeyE') cast('E'); if (e.code === 'KeyR') cast('R');
+  keys[e.code] = true;
+});
+addEventListener('keyup', e => { keys[e.code] = false; });
+function toggleMute() { muted = !muted; $('#mute').textContent = muted ? '🔇' : '🔊'; if (muted) try { speechSynthesis.cancel(); } catch (e) { } }
+$('#mute').onclick = toggleMute;
+
+// ====================================================================
+//  HUD
+// ====================================================================
+function buildHUD() {
+  const box = $('#abilities'), tip = $('#tip');
+  for (const k of ['Q', 'W', 'E', 'R']) {
+    const A = ABIL[k], d = document.createElement('div');
+    d.className = 'ab'; d.dataset.k = k;
+    d.innerHTML = `<span class="key">${k}</span>${A.icon}<span class="cost">${A.mana}</span><div class="cd hidden"></div>`;
+    d.onpointerdown = e => { e.stopPropagation(); cast(k); };
+    d.onmouseenter = () => { tip.innerHTML = `<b>${A.name}</b> <span style="opacity:.6">[${k}] · ${A.mana} mana · ${A.cd}s</span><br>${A.desc}`; tip.classList.remove('hidden'); };
+    d.onmouseleave = () => tip.classList.add('hidden');
+    box.appendChild(d);
+  }
+}
+function updateHUD() {
+  $('#cakeFill').style.width = (S.cakeHp / S.cakeMax * 100) + '%';
+  $('#cakeTxt').textContent = `🎂 BIRTHDAY CAKE  ${Math.ceil(S.cakeHp)} / ${S.cakeMax}`;
+  $('#manaFill').style.width = (S.mana / S.manaMax * 100) + '%';
+  $('#manaTxt').textContent = `${Math.floor(S.mana)} / ${S.manaMax}`;
+  $('#goldN').textContent = S.gold;
+  if (S.boss) $('#bossFill').style.width = (Math.max(0, S.boss.hp) / S.boss.maxHp * 100) + '%';
+  for (const k of ['Q', 'W', 'E', 'R']) {
+    const el = document.querySelector(`.ab[data-k="${k}"]`), cd = el.querySelector('.cd');
+    if (S.cds[k] > 0) { cd.classList.remove('hidden'); cd.textContent = Math.ceil(S.cds[k]); } else cd.classList.add('hidden');
+    el.classList.toggle('nomana', S.mana < ABIL[k].mana);
+  }
+}
+
+// the cat jump-scare: just like in real life when he screams during a teamfight
+let screamT = 0;
+function scream(big = false) {
+  if (screamT > 0) return;
+  screamT = big ? 2.2 : 1.5; S.shake = Math.max(S.shake, big ? 0.6 : 0.35);
+  const el = $('#scream'); el.querySelector('div').textContent = pick(big ? ['MEEEEEEOOOOOWWWW!!!', 'МЯЯЯЯУУУУ!!!', '야아아아옹!!!'] : ['MEEEOOOWWW!!!', 'МЯУУУ!!!', '야옹!!!', 'MRRRAOOOW!!']);
+  el.classList.add('on');
+  for (let i = 0; i < (big ? 5 : 3); i++) setTimeout(() => meow(big ? 0.55 : 0.4, rand(0.8, 1.2), rand(0.4, 0.8)), i * 260);
+}
+
+// ====================================================================
+//  waves
+// ====================================================================
+function startWave(i) {
+  S.wave = i; const W = WAVES[i];
+  const q = [];
+  for (const [t, n] of W.spawns) for (let j = 0; j < n; j++) q.push(t);
+  for (let j = q.length - 1; j > 0; j--) { const r = (Math.random() * (j + 1)) | 0;[q[j], q[r]] = [q[r], q[j]]; }
+  if (W.boss) q.unshift('boss');
+  S.queue = q; S.spawnT = 1.0;
+  $('#waveLbl').textContent = `${W.title} / ${WAVES.length}`;
+  announce(W.title, W.sub); sfx.wave();
+}
+function spawnOne(type) {
+  const a = rand(0, TAU), r = type === 'boss' ? 36 : rand(38, 44);
+  const c = makeCat(type, V(Math.cos(a) * r, 0, Math.sin(a) * r));
+  if (type === 'boss') { S.boss = c; $('#bossBar').classList.remove('hidden'); scream(true); }
+}
+
+// ====================================================================
+//  update loop
+// ====================================================================
+function animWalk(h, moving, dt, speedMul = 1) {
+  h.walkT += dt * (moving ? 11 * speedMul : 2);
+  const sw = moving ? Math.sin(h.walkT) * 0.7 : 0;
+  if (h.legs) { h.legs[0].rotation.x = sw; h.legs[1].rotation.x = -sw; }
+  if (h.arms) { h.arms[0].rotation.x = -sw * 0.8; h.arms[1].rotation.x = sw * 0.8; }
+  h.model.position.y = moving ? Math.abs(Math.sin(h.walkT)) * 0.12 : Math.sin(h.walkT) * 0.03;
+}
+const tmp = V();
+function moveToward(h, target, spd, dt) {
+  tmp.copy(target).sub(h.root.position); tmp.y = 0;
+  const d = tmp.length(); if (d < 0.05) return 0;
+  const step = Math.min(d, spd * dt); tmp.multiplyScalar(step / d);
+  h.root.position.add(tmp);
+  const want = Math.atan2(tmp.x, tmp.z); h.model.rotation.y = lerpAngle(h.model.rotation.y, want, Math.min(1, dt * 14));
+  return d;
+}
+function faceTo(h, p, dt) { const w = Math.atan2(p.x - h.root.position.x, p.z - h.root.position.z); h.model.rotation.y = lerpAngle(h.model.rotation.y, w, Math.min(1, dt * 14)); }
+function lerpAngle(a, b, t) { let d = ((b - a + Math.PI) % TAU + TAU) % TAU - Math.PI; return a + d * t; }
+
+function heroAttack(h, c, dt, rateMul = 1) {
+  faceTo(h, c.root.position, dt);
+  h.atkT -= dt * rateMul;
+  if (h.atkT <= 0) {
+    h.atkT = h.atkRate;
+    if (h.melee) {
+      damage(c, h.dmg, h); sfx.bite(); h.hop = 0.25;
+      burst(c.root.position.clone().add(V(0, 0.8, 0)), ['#9cc8ff', '#ffffff'], 5, 4, 0.4, 0.7);
+    } else {
+      const from = h.root.position.clone(); from.y += 1.8 * h.root.scale.y;
+      shoot(from, c, h.dmg, h.projColor, h);
+      if (h.arms) h.arms[1].rotation.x = -2.2;
+    }
+  }
+}
+
+function updatePlayer(dt) {
+  const h = player, spd = h.speed * (S.buff > 0 ? 1.8 : 1), rateMul = S.buff > 0 ? 3 : 1;
+  // arrow keys as an alternative
+  const kx = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0), kz = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);
+  let moving = false;
+  if (kx || kz) { h.moveTo = h.root.position.clone().add(V(kx, 0, kz).normalize().multiplyScalar(2)); h.target = null; }
+  if (h.target && !h.target.alive) h.target = null;
+  if (h.moveTo) {
+    const d = moveToward(h, h.moveTo, spd, dt); moving = true;
+    if (d < 0.15) { h.moveTo = null; }
+  } else {
+    if (!h.target) h.target = nearestCat(h.root.position, h.range + 1.5);
+    if (h.target) {
+      const d = h.root.position.distanceTo(h.target.root.position);
+      if (d > h.range) { moveToward(h, h.target.root.position, spd, dt); moving = true; }
+      else heroAttack(h, h.target, dt, rateMul);
+    }
+  }
+  if (!h.target || h.moveTo) h.atkT = Math.max(0, h.atkT - dt * rateMul);
+  animWalk(h, moving, dt, S.buff > 0 ? 1.6 : 1);
+  if (S.buff > 0 && moving && Math.random() < 0.5) burst(h.root.position.clone().add(V(0, 0.3, 0)), ['#ff4d4d', '#ffd23f'], 1, 1.5, 0.4, 0.8, 0);
+  // keep out of the cake
+  const r = Math.hypot(h.root.position.x, h.root.position.z); if (r < 3.6) h.root.position.multiplyScalar(3.6 / r);
+}
+
+function updateAlly(h, dt) {
+  if (h.target && (!h.target.alive || h.target.root.position.length() > h.leash + 6)) h.target = null;
+  if (!h.target) { h.idleT -= dt; if (h.idleT <= 0) { h.idleT = 0.3; const c = nearestCat(h.root.position, 26); if (c && c.root.position.length() < h.leash + 4) h.target = c; } }
+  let moving = false;
+  if (h.target) {
+    const d = h.root.position.distanceTo(h.target.root.position);
+    if (d > h.range) { moveToward(h, h.target.root.position, h.speed, dt); moving = true; }
+    else heroAttack(h, h.target, dt);
+  } else {
+    if (h.root.position.distanceTo(h.anchor) > 0.5) { moveToward(h, h.anchor, h.speed * 0.7, dt); moving = true; }
+    else if (Math.random() < dt * 0.4) h.anchor.add(V(rand(-2, 2), 0, rand(-2, 2))).clampLength(5, 14);
+  }
+  animWalk(h, moving, dt);
+  if (h.hop > 0) { h.hop -= dt; h.model.position.y += Math.sin((0.25 - h.hop) / 0.25 * Math.PI) * 0.5; }
+  if (h.quips.length && Math.random() < dt * 0.02) floatText(pick(h.quips), h.root.position.clone().add(V(0, 4, 0)), '#ffffff', 0.45, 1.6, 0.8);
+  const r = Math.hypot(h.root.position.x, h.root.position.z); if (r < 3.6) h.root.position.multiplyScalar(3.6 / r);
+}
+
+const MEOWS = ['MEOW!', 'MEOW!!!', 'МЯУ!', '야옹!', 'MRRAOW', 'meow?'];
+function updateCat(c, dt) {
+  c.walkT += dt * 12;
+  if (c.hitT > 0) { c.hitT -= dt; c.face.material.color.set(c.hitT > 0 ? '#ff8080' : '#ffffff'); }
+  // knockback / airtime
+  c.root.position.addScaledVector(c.vel, dt); c.vel.multiplyScalar(Math.pow(0.04, dt));
+  if (c.lev > 0) {
+    c.lev -= dt; c.y += (3.2 - c.y) * Math.min(1, dt * 3); c.model.rotation.z += dt * 4; c.vy = 0;
+    if (c.lev <= 0) { c.vy = -4; damage(c, c.levDmg, player); }
+  } else {
+    c.vy -= 30 * dt; c.y += c.vy * dt;
+    if (c.y <= 0) { c.y = 0; c.vy = 0; c.model.rotation.z *= 0.8; }
+  }
+  if (!c.alive) return;
+  c.root.position.y = c.y;
+  const p = c.root.position, dist = Math.hypot(p.x, p.z);
+  if (c.stun > 0) c.stun -= dt;
+  const reach = CAKE_R + 0.5 * c.T.scale;
+  let moving = false;
+  if (c.stun <= 0 && c.y < 0.05) {
+    if (dist > reach) {
+      const sp = c.T.speed * dt; p.x -= p.x / dist * sp; p.z -= p.z / dist * sp; moving = true;
+      c.model.rotation.y = Math.atan2(-p.x, -p.z);
+    } else {
+      c.model.rotation.y = Math.atan2(-p.x, -p.z);
+      c.atkT -= dt;
+      if (c.atkT <= 0) {
+        c.atkT = 1; S.cakeHp -= c.T.dmg; sfx.bite();
+        burst(V(p.x * 0.8, 1.5, p.z * 0.8), ['#ff9ec7', '#fff4e6', '#7a4a2a'], 3, 3, 0.5, 0.7);
+        if (Math.random() < 0.25) floatText(pick(['NOM', 'nom nom', '*bite*', 'om nom']), V(p.x, 2.8, p.z), '#ff9ec7', 0.45);
+      }
+    }
+  }
+  // legs + tail
+  const sw = moving ? Math.sin(c.walkT) * 0.6 : 0;
+  c.legs[0].rotation.x = sw; c.legs[3].rotation.x = sw; c.legs[1].rotation.x = -sw; c.legs[2].rotation.x = -sw;
+  c.tail.rotation.z = Math.sin(c.walkT * 0.4) * 0.5;
+  c.model.position.y = moving ? Math.abs(Math.sin(c.walkT)) * 0.06 : 0;
+  c.face.position.y = 1.35 + (moving ? Math.abs(Math.sin(c.walkT)) * 0.06 : 0);
+  if (c.bar) c.bar.scale.x = 1.04 * Math.max(0, c.hp / c.maxHp);
+  // the meowing. constant meowing.
+  c.meowT -= dt;
+  if (c.meowT <= 0) {
+    if (c.type === 'boss') {
+      c.meowT = rand(1.2, 2.2); meow(0.45, 0.55, 1.0);
+      floatText(pick(['MEEEOOOOW', 'МЯЯЯУ', '야아아옹', 'FEED ME']), p.clone().add(V(0, 6.5, 0)), '#ff5a3a', 1.2, 1.4);
+    } else if (c.type === 'screamer') {
+      c.meowT = rand(5, 8); scream(false);
+      floatText('MEEOOWW!!!', p.clone().add(V(0, 3.4, 0)), '#ff5a3a', 0.8);
+    } else {
+      c.meowT = rand(4, 11); meow(c.type === 'kitten' ? 0.12 : 0.15, c.type === 'kitten' ? 1.6 : 1, c.type === 'kitten' ? 0.35 : 0.55);
+      floatText(pick(MEOWS), p.clone().add(V(0, 2.6 * c.T.scale, 0)), '#ffffff', 0.45, 0.9, 1.4);
+    }
+  }
+  if (c.type === 'boss') {
+    c.spawnT -= dt; c.megaT -= dt;
+    if (c.spawnT <= 0) { c.spawnT = 6.5; for (let i = 0; i < 3; i++) makeCat('kitten', p.clone().add(V(rand(-2, 2), 0, rand(-2, 2)))); floatText('*summons kittens*', p.clone().add(V(0, 7.5, 0)), '#ffffff', 0.6); }
+    if (c.megaT <= 0) { c.megaT = 11; scream(true); }
+  }
+}
+
+function separateCats() {
+  for (let i = 0; i < cats.length; i++) {
+    const a = cats[i]; if (!a.alive) continue;
+    for (let j = i + 1; j < cats.length; j++) {
+      const b = cats[j]; if (!b.alive) continue;
+      const dx = b.root.position.x - a.root.position.x, dz = b.root.position.z - a.root.position.z;
+      const min = 0.7 * (a.T.scale + b.T.scale), d2 = dx * dx + dz * dz;
+      if (d2 < min * min && d2 > 1e-6) {
+        const d = Math.sqrt(d2), push = (min - d) * 0.5, nx = dx / d, nz = dz / d;
+        const wa = b.type === 'boss' ? 1 : a.type === 'boss' ? 0 : 0.5;
+        a.root.position.x -= nx * push * wa * 2; a.root.position.z -= nz * push * wa * 2;
+        b.root.position.x += nx * push * (1 - wa) * 2; b.root.position.z += nz * push * (1 - wa) * 2;
+      }
+    }
+  }
+}
+
+function updateEffects(dt) {
+  for (let i = projs.length - 1; i >= 0; i--) {
+    const pr = projs[i];
+    if (pr.target.alive) { pr.last.copy(pr.target.root.position); pr.last.y += 0.8 * pr.target.T.scale; }
+    tmp.copy(pr.last).sub(pr.m.position); const d = tmp.length(), step = pr.speed * dt;
+    pr.m.rotation.x += dt * 10;
+    if (d <= step + 0.2) {
+      if (pr.target.alive) { damage(pr.target, pr.dmg, pr.owner); sfx.hit(); burst(pr.m.position, pr.m.material.color.getStyle(), 4, 3, 0.3, 0.6); }
+      scene.remove(pr.m); projs.splice(i, 1);
+    } else pr.m.position.addScaledVector(tmp, step / d);
+  }
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.life -= dt;
+    p.v.y -= p.grav * dt; p.m.position.addScaledVector(p.v, dt); p.m.rotation.x += dt * 6;
+    if (p.m.position.y < 0.05 && p.grav > 5) { p.m.position.y = 0.05; p.v.multiplyScalar(0.5); p.v.y = Math.abs(p.v.y) * 0.3; }
+    p.m.scale.setScalar(p.s * Math.max(0, p.life / p.max));
+    if (p.life <= 0) { scene.remove(p.m); parts.splice(i, 1); }
+  }
+  for (let i = floats.length - 1; i >= 0; i--) {
+    const f = floats[i]; f.life -= dt; f.s.position.y += f.vy * dt;
+    const k = f.life / f.max; f.s.material.opacity = Math.min(1, k * 2.5);
+    const pop = k > 0.85 ? 1 + (k - 0.85) * 3 : 1; f.s.scale.set(f.s.userData.h * f.s.userData.ar * pop, f.s.userData.h * pop, 1);
+    if (f.life <= 0) { scene.remove(f.s); f.s.material.dispose(); floats.splice(i, 1); }
+  }
+  for (let i = rings.length - 1; i >= 0; i--) {
+    const r = rings[i]; r.life -= dt; const k = 1 - r.life / r.max;
+    r.m.scale.setScalar(0.2 + k * r.maxR); r.m.material.opacity = 0.9 * (1 - k);
+    if (r.life <= 0) { scene.remove(r.m); r.m.geometry.dispose(); r.m.material.dispose(); rings.splice(i, 1); }
+  }
+  for (let i = helpers.length - 1; i >= 0; i--) {
+    const h = helpers[i]; h.life -= dt;
+    if (h.kind === 'babushka') {
+      h.atkT -= dt; h.walkT += dt * 3; h.model.position.y = Math.abs(Math.sin(h.walkT)) * 0.1;
+      const c = nearestCat(h.root.position, 16);
+      if (c) { faceTo(h, c.root.position, dt); if (h.atkT <= 0) { h.atkT = 0.45; shoot(h.root.position.clone().add(V(0, 1.8, 0)), c, 45, '#d9902f', { name: 'Babushka' }, true); h.arms[1].rotation.x = -2.4; } }
+      h.arms[1].rotation.x *= 0.9;
+      if (Math.random() < dt * 0.6) floatText(pick(['Eat, eat!', 'Pirozhki!', 'Кушай!', 'So thin! Eat!']), h.root.position.clone().add(V(0, 4, 0)), '#ffb3e1', 0.45, 1.4, 0.8);
+      if (h.life <= 0) { burst(h.root.position.clone().add(V(0, 1, 0)), ['#ffb3e1', '#ffffff'], 15, 5); scene.remove(h.root); helpers.splice(i, 1); }
+    } else if (h.kind === 'grogu') {
+      h.root.position.y = h.base + Math.min(1.5, (3.4 - h.life) * 2) + Math.sin(S.t * 4) * 0.1;
+      h.root.rotation.y += dt * 0.6; h.aura.material.opacity = 0.2 + Math.sin(S.t * 10) * 0.08;
+      if (h.life <= 0) { burst(h.root.position.clone().add(V(0, 1.5, 0)), ['#7dff9a', '#ffffff'], 25, 6); scene.remove(h.root); helpers.splice(i, 1); }
+    }
+  }
+}
+
+// camera
+const camTarget = V();
+function updateCamera(dt) {
+  if (S.won) {
+    const a = S.t * 0.25, r = 17;
+    camera.position.lerp(V(Math.cos(a) * r, 10, Math.sin(a) * r), Math.min(1, dt * 2));
+    camTarget.lerp(V(0, 3, 0), Math.min(1, dt * 2));
+  } else {
+    const t = player ? player.root.position : V();
+    camTarget.lerp(V(t.x, 0, t.z), Math.min(1, dt * 6));
+    camera.position.lerp(V(camTarget.x, 26 * S.zoom, camTarget.z + 17 * S.zoom), Math.min(1, dt * 8));
+  }
+  camera.lookAt(camTarget);
+  if (S.shake > 0) { S.shake -= dt; const k = S.shake * 0.8; camera.position.add(V(rand(-k, k), rand(-k, k), rand(-k, k))); }
+}
+
+// ====================================================================
+//  win / lose
+// ====================================================================
+function lose() {
+  S.running = false; S.over = true;
+  meow(0.5, 0.6, 1.2);
+  setTimeout(() => { $('#lose').classList.remove('hidden'); $('#hud').classList.add('hidden'); }, 1200);
+}
+function win() {
+  S.running = false; S.won = true; S.winT = 0;
+  $('#hud').classList.add('hidden');
+  // everybody gathers around the cake and the cats finally sit still
+  const team = [player, ...allies];
+  team.forEach((h, i) => { const a = i / team.length * TAU + 0.4; h.root.position.set(Math.cos(a) * 6.5, 0, Math.sin(a) * 6.5); h.model.rotation.y = Math.atan2(-h.root.position.x, -h.root.position.z); h.target = null; h.moveTo = null; });
+  for (let i = 0; i < 7; i++) {
+    const a = i / 7 * TAU, c = makeCat(i === 3 ? 'screamer' : 'cat', V(Math.cos(a) * 9.5, 0, Math.sin(a) * 9.5));
+    cats.pop(); decorCats.push(c); c.root.remove(c.bar, c.barBg); c.model.rotation.y = Math.atan2(-c.root.position.x, -c.root.position.z);
+    c.model.rotation.x = -0.35;
+  }
+  setTimeout(() => {
+    $('#win').classList.remove('hidden');
+    say('С днём рождения, Сонгкун!', 'ru-RU', 1.0, 1.1);
+  }, 1500);
+}
+function blowCandles() {
+  S.blown = true; noise(0.8, 0.5, 1200);
+  flames.forEach(f => { burst(f.getWorldPosition(V()), ['#bbbbbb', '#888888', '#dddddd'], 6, 1.5, 1.6, 0.8, -1); f.visible = false; });
+  cakeLight.intensity = 0;
+  $('#blow').classList.add('hidden'); $('#final').classList.remove('hidden');
+  setTimeout(playHappyBirthday, 600);
+  setTimeout(() => say('생일 축하해!', 'ko-KR', 1.0, 1.2), 12500);
+}
+let fwT = 0;
+function updateWin(dt) {
+  S.winT += dt;
+  [player, ...allies].forEach((h, i) => { h.walkT += dt * 8; h.model.position.y = Math.max(0, Math.sin(h.walkT + i)) * 0.6; if (h.arms) { h.arms[0].rotation.z = 2.6 + Math.sin(h.walkT) * 0.3; h.arms[1].rotation.z = -2.6 - Math.sin(h.walkT) * 0.3; } });
+  decorCats.forEach((c, i) => { c.tail.rotation.z = Math.sin(S.t * 3 + i) * 0.6; if (Math.random() < dt * 0.15) { floatText(pick(['мяу ❤', '야옹 ❤', 'purrr ❤', 'meow ❤']), c.root.position.clone().add(V(0, 2.8, 0)), '#ffb3e1', 0.5); meow(0.08, 1.3, 0.4); } });
+  fwT -= dt;
+  if (fwT <= 0) {
+    fwT = S.blown ? rand(0.25, 0.6) : rand(0.7, 1.3);
+    const p = V(rand(-14, 14), rand(9, 16), rand(-14, 14));
+    const cols = pick([['#ff4d6d', '#ffd23f'], ['#4aa8ff', '#ffffff'], ['#5ee36a', '#ffd23f'], ['#b98cff', '#ff9ec7']]);
+    burst(p, cols, 40, 9, 1.6, 1.2, 3);
+    tone(rand(80, 140), 0.4, 'sine', 0.2, 0.4); noise(0.3, 0.15, 2000);
+  }
+  if (S.blown && Math.random() < dt * 30) burst(V(rand(-12, 12), 14, rand(-12, 12)), ['#ff4d6d', '#ffd23f', '#4aa8ff', '#5ee36a', '#ffffff', '#b98cff'], 1, 1, 4, 1, 1.5);
+}
+
+// ====================================================================
+//  main loop
+// ====================================================================
+const clock = new THREE.Clock();
+function loop() {
+  requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  S.t += dt;
+  // ambient animation
+  flames.forEach((f, i) => { if (f.visible) f.scale.set(0.45 + Math.sin(S.t * 20 + i) * 0.05, 0.6 + Math.sin(S.t * 17 + i * 2) * 0.08, 1); });
+  if (cakeLight && !S.blown) cakeLight.intensity = 6 + Math.sin(S.t * 13) * 0.8;
+  balloons.forEach((b, i) => { b.position.y = 0.5 + Math.sin(S.t * 1.3 + i) * 0.3; b.rotation.z = Math.sin(S.t + i) * 0.08; });
+  if (cake) cake.userData.banner.position.y = 7.5 + Math.sin(S.t * 2) * 0.2;
+  if (screamT > 0) { screamT -= dt; if (screamT <= 0) $('#scream').classList.remove('on'); }
+
+  if (S.running) {
+    for (const k in S.cds) S.cds[k] = Math.max(0, S.cds[k] - dt);
+    S.mana = Math.min(S.manaMax, S.mana + 13 * dt);
+    S.buff = Math.max(0, S.buff - dt); S.multiT = Math.max(0, S.multiT - dt);
+    // waves
+    if (S.queue.length) { S.spawnT -= dt; if (S.spawnT <= 0) { S.spawnT = WAVES[S.wave].interval; spawnOne(S.queue.shift()); } }
+    else if (!cats.some(c => c.alive)) {
+      if (S.betweenT <= 0) {
+        if (S.wave === WAVES.length - 1) { win(); }
+        else { S.betweenT = 4.5; announce('WAVE CLEARED', pick(['GG, easy', 'Davai davai, next one!', 'Sung Min: "ez"', 'Gucci is plotting something…'])); S.mana = S.manaMax; }
+      } else { S.betweenT -= dt; if (S.betweenT <= 0) startWave(S.wave + 1); }
+    }
+    updatePlayer(dt);
+    allies.forEach(a => updateAlly(a, dt));
+    for (const c of cats) updateCat(c, dt);
+    separateCats();
+    for (let i = cats.length - 1; i >= 0; i--) if (!cats[i].alive) cats.splice(i, 1);
+    if (S.cakeHp <= 0) { S.cakeHp = 0; lose(); }
+    updateHUD();
+  } else if (S.won) updateWin(dt);
+  if (S.running || S.won || S.over) updateEffects(dt);
+  updateCamera(dt);
+  renderer.render(scene, camera);
+}
+
+// ====================================================================
+//  boot
+// ====================================================================
+function clearWorld() {
+  for (const arr of [cats, decorCats]) { arr.forEach(c => scene.remove(c.root)); arr.length = 0; }
+  [...projs.map(p => p.m), ...parts.map(p => p.m), ...floats.map(f => f.s), ...rings.map(r => r.m), ...helpers.map(h => h.root)].forEach(o => scene.remove(o));
+  projs.length = parts.length = floats.length = rings.length = helpers.length = 0;
+  if (player) scene.remove(player.root); allies.forEach(a => scene.remove(a.root));
+  flames.forEach(f => f.visible = true);
+  feedEl.innerHTML = ''; $('#bossBar').classList.add('hidden');
+}
+function startGame() {
+  initAudio(); if (AC.state === 'suspended') AC.resume();
+  clearWorld(); resetState(); buildHeroes();
+  S.running = true; S.betweenT = 0;
+  ['#title', '#lose', '#win'].forEach(s => $(s).classList.add('hidden'));
+  $('#final').classList.add('hidden'); $('#blow').classList.remove('hidden');
+  $('#hud').classList.remove('hidden');
+  say('Привет, Сонгкун! Давай, давай!');
+  startWave(0);
+}
+
+async function boot() {
+  try { await Promise.race([document.fonts.load('64px "Russo One"'), new Promise(r => setTimeout(r, 3000))]); } catch (e) { }
+  await loadImages();
+  // faces cut out of the photos
+  const ring = '#ffd23f';
+  faces.sung = cropCanvas(IM.p1, 345, 430, 310, { ring });
+  faces.sung2 = cropCanvas(IM.p4, 640, 690, 170, {});
+  faces.catT = tex(cropCanvas(IM.p3, 370, 560, 330, { ears: true }));
+  faces.bossT = tex(cropCanvas(IM.p2, 400, 505, 150, { ears: true, rot: -2.4 }));
+  faces.hyung = cropCanvas(IM.p6, 185, 215, 165, { ring: '#4aa8ff' });   // Sung Min (older)
+  faces.dong = cropCanvas(IM.p5, 172, 190, 165, { ring: '#ffa53a' });    // Sung Jin (younger)
+  faces.vasya = cropCanvas(IM.p7, 92, 100, 92, { ring: '#ff4d4d' });     // Vasily
+  faces.babushka = cartoonFace({ hat: 'scarf', skin: '#f0c7a8', ring: null });
+  makeTabby();
+  buildWorld(); buildCake(); buildHUD(); resetState();
+
+  // title screen
+  $('#tFace').src = faces.sung.toDataURL();
+  $('#pImg').src = faces.sung.toDataURL();
+  $('#screamImg').src = IM.p3.src;
+  const grogCanvas = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+    g.fillStyle = '#9cc786'; g.beginPath(); g.ellipse(64, 70, 34, 30, 0, 0, TAU); g.fill();
+    g.beginPath(); g.moveTo(34, 62); g.lineTo(2, 48); g.lineTo(36, 80); g.fill(); g.beginPath(); g.moveTo(94, 62); g.lineTo(126, 48); g.lineTo(92, 80); g.fill();
+    g.fillStyle = '#111'; g.beginPath(); g.arc(52, 68, 8, 0, TAU); g.arc(76, 68, 8, 0, TAU); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(54, 65, 2.5, 0, TAU); g.arc(78, 65, 2.5, 0, TAU); g.fill(); return c; })();
+  const stitchCanvas = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+    g.fillStyle = '#3f74d6'; g.beginPath(); g.moveTo(30, 60); g.lineTo(2, 20); g.lineTo(46, 44); g.fill(); g.beginPath(); g.moveTo(98, 60); g.lineTo(126, 20); g.lineTo(82, 44); g.fill();
+    g.beginPath(); g.ellipse(64, 70, 40, 34, 0, 0, TAU); g.fill(); g.fillStyle = '#0d1424'; g.beginPath(); g.ellipse(48, 64, 9, 12, 0, 0, TAU); g.ellipse(80, 64, 9, 12, 0, 0, TAU); g.fill();
+    g.fillStyle = '#1b2f63'; g.beginPath(); g.ellipse(64, 82, 13, 8, 0, 0, TAU); g.fill(); return c; })();
+  const team = [
+    [faces.sung.toDataURL(), 'Sungkun', 'Birthday boy. Carry.'],
+    [faces.hyung.toDataURL(), 'Sung Min', 'Big brother'],
+    [faces.dong.toDataURL(), 'Sung Jin', 'Little brother'],
+    [faces.vasya.toDataURL(), 'Vasily', '"Babushka". Davai davai!'],
+    [stitchCanvas.toDataURL(), 'Stitch', 'Ohana means family'],
+    [grogCanvas.toDataURL(), 'Grogu', 'Ultimate ability'],
+    [cropCanvas(IM.p3, 370, 560, 330).toDataURL(), 'GUCCI', 'Enemy cat. Very loud.', true],
+  ];
+  $('#team').innerHTML = team.map(([src, n, d, enemy]) => `<div class="member${enemy ? ' enemy' : ''}"><img src="${src}"><b>${n}</b>${d}</div>`).join('');
+  $('#polas').innerHTML = [[IM.p1.src, 'the birthday boy'], [IM.p4.src, 'Jedi master Sungkun'], [IM.p2.src, 'Gucci, the menace'], [IM.p3.src, 'Gucci: MEOW.']]
+    .map(([s, t]) => `<div class="pola"><img src="${s}">${t}</div>`).join('');
+
+  const sb = $('#startBtn'); sb.onclick = startGame; sb.disabled = false; sb.style.opacity = ''; sb.textContent = 'DAVAI DAVAI ▶';
+  $('#retryBtn').onclick = startGame;
+  $('#againBtn').onclick = startGame;
+  $('#win').addEventListener('pointerdown', e => { if (e.target.id !== 'againBtn' && S.won && !S.blown && S.winT > 1.2) blowCandles(); });
+
+  camera.position.set(0, 30, 30); camera.lookAt(0, 0, 0);
+  // idle orbit on the title screen
+  S.won = false;
+  loop();
+}
+boot();
+
+// debug hooks for testing
+window.__game = { S, player: () => player, cam: camera, cats: () => cats, cast, win: () => { cats.forEach(c => { c.alive = false; scene.remove(c.root); }); cats.length = 0; S.queue = []; S.wave = WAVES.length - 1; }, wave: i => { S.queue = []; cats.forEach(c => { c.alive = false; scene.remove(c.root); }); cats.length = 0; startWave(i); } };
+</script>
+</body>
+</html>
