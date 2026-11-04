@@ -560,7 +560,7 @@ const ABIL = {
 };
 
 const S = {};
-let player, allies = [], cats = [], projs = [], parts = [], floats = [], rings = [], helpers = [], decorCats = [], wards = [];
+let player, allies = [], cats = [], projs = [], parts = [], floats = [], rings = [], helpers = [], decorCats = [], wards = [], chenCreeps = [];
 let faces = {};
 
 function resetState() {
@@ -599,7 +599,7 @@ function makeHero(opts) {
   const h = {
     ...parts3d, name: opts.name, color: opts.color || '#fff', speed: opts.speed || 6, range: opts.range || 7, dmg: opts.dmg || 18,
     atkRate: opts.atkRate || 1, atkT: 0, projColor: opts.projColor || '#ffd23f', melee: !!opts.melee,
-    anchor: opts.anchor ? opts.anchor.clone() : V(), support: !!opts.support, wardT: 1.5, leash: opts.leash || 22, target: null, moveTo: null, isPlayer: !!opts.isPlayer,
+    anchor: opts.anchor ? opts.anchor.clone() : V(), support: !!opts.support, chen: !!opts.chen, wardT: 1.5, leash: opts.leash || 22, target: null, moveTo: null, isPlayer: !!opts.isPlayer,
     walkT: Math.random() * 10, idleT: 0, hop: 0, quips: opts.quips || [],
   };
   h.root.position.copy(h.anchor);
@@ -617,12 +617,14 @@ function buildHeroes() {
   const neck = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.035, 6, 20), std('#ffffff')); neck.rotation.x = Math.PI / 2 - 0.4; neck.position.set(0, 1.85, 0.08); player.model.add(neck);
 
   allies = [
-    makeHero({ name: 'Sung Min', shirt: '#1d1d22', pants: '#2b2b33', face: faces.hyung, headSize: 1.9, scale: 1.08, speed: 6, range: 9, dmg: 22, atkRate: 1.1, projColor: '#4aa8ff', anchor: V(-9, 0, 3), nameTag: 'Sung Min (big bro)', tagColor: '#8fc6ff', quips: ['Hyung carry', 'Just farm, bro', 'ㅋㅋㅋ', 'Gucci, NO!'] }),
-    makeHero({ name: 'Sung Jin', shirt: '#5f6b4a', pants: '#4d5540', face: faces.dong, headSize: 1.8, scale: 0.85, speed: 6.8, range: 8, dmg: 16, atkRate: 0.75, projColor: '#ffa53a', anchor: V(9, 0, 3), nameTag: 'Sung Jin (little bro)', tagColor: '#ffcf8f', quips: ['I need gold!', 'Sir, yes sir!', 'ㅋㅋㅋㅋ', 'Gucci stop!!'] }),
-    makeHero({ name: 'Vasily', shirt: '#c62e2e', pants: '#2c3550', face: faces.vasya, headSize: 1.9, speed: 6.2, range: 8, dmg: 20, atkRate: 0.9, projColor: '#ff4d4d', anchor: V(0, 0, -9), nameTag: 'Vasily (Babushka)', tagColor: '#ff9a9a', quips: ['DAVAI DAVAI!', 'Blyat, cats!', 'PRIVET!', 'Babushka help!'] }),
+    makeHero({ name: 'Sung Min', shirt: '#1d1d22', pants: '#2b2b33', face: faces.hyung, headSize: 1.9, scale: 1.08, speed: 6, range: 9, dmg: 22, atkRate: 1.1, projColor: '#4aa8ff', anchor: V(-9, 0, 3), nameTag: 'Sung Min (big bro)', tagColor: '#8fc6ff', quips: ['I go mid.', 'Best mider in Korea', 'Nobody is better than me on mid', 'Mid or feed', 'Give me mid, I win', '1v1 me mid, Gucci', 'Mid is MINE', 'Hyung mid = GG', 'Just let me mid', 'Learn from the mid player'] }),
+    makeHero({ name: 'Sung Jin', shirt: '#5f6b4a', pants: '#4d5540', face: faces.dong, headSize: 1.8, scale: 0.85, speed: 6.8, range: 8, dmg: 16, atkRate: 0.75, projColor: '#ffa53a', anchor: V(9, 0, 3), nameTag: 'Sung Jin (little bro)', tagColor: '#ffcf8f', quips: ['You all play so bad', 'I play good. You play bad.', 'Watch and learn, noobs', 'I carry, you feed', 'Report my team', 'Why are you all so bad?', 'Only I am good here', 'EZ for me, hard for you', 'Skill issue (yours)', 'ㅋㅋㅋ noobs'] }),
+    makeHero({ name: 'Vasily', shirt: '#c62e2e', pants: '#2c3550', face: faces.vasya, headSize: 1.9, speed: 5, anchor: V(0, 0, -9), nameTag: 'Vasily (Babushka)', tagColor: '#ff9a9a', chen: true }),
     makeHero({ name: 'Arina', shirt: '#f2f2f6', pants: '#e4e4ec', face: faces.arina, headSize: 1.9, scale: 0.9, speed: 7.5, anchor: V(-5, 0, -7), nameTag: 'Arina (pos 5)', tagColor: '#ffb3e1', support: true }),
     makeHero({ name: 'Stitch', stitch: true, speed: 9, range: 1.9, dmg: 26, atkRate: 0.55, melee: true, anchor: V(5, 0, -6), leash: 30, quips: ['Ohana!', 'Aloha!', 'Meega nala kweesta!'] }),
   ];
+  const vas = allies.find(h => h.chen);
+  ['centaur', 'wolf', 'satyr', 'ogre', 'hellbear'].forEach((k, i) => { const c = makeCreep(k); c.root.position.copy(vas.root.position).add(V(0, 0, -1.8 * (i + 1))); chenCreeps.push(c); });
 }
 
 function makeCat(type, pos) {
@@ -988,8 +990,89 @@ function updateArina(h, dt) {
   const r = Math.hypot(h.root.position.x, h.root.position.z); if (r < 3.6) h.root.position.multiplyScalar(3.6 / r);
 }
 
+// ---------- Vasily, the Chen player, and his five completely useless creeps ----------
+const CHEN_LINES = ['Chen is best hero', 'Nobody is better than Chen', 'Chen is strongest in this house', 'Im about to buy rapier',
+  'You need to buy rapier', 'Divine rapier', 'Buy divine', 'I need a second divine rapier'];
+const CREEP_LINES = ['haha we bring zero impact', 'we are just here for the vibes', 'zero damage, full confidence', 'impact? never heard of it',
+  'we follow. we do not fight.', 'please do not count us in net worth', 'we are decorative', 'our job: walk behind Vasily',
+  '0 kills, 100% style', 'is that a cat? not our problem', 'we cost 0 gold and it shows', 'we are saving for rapier too',
+  'useless and proud', 'Chen said follow, so we follow'];
+function makeCreep(kind) {
+  const root = new THREE.Group(), model = new THREE.Group(); root.add(model);
+  const legs = [];
+  const leg = (x, z, col, len = 0.6, r = 0.11) => { const l = mesh(new THREE.CylinderGeometry(r, r * 0.85, len, 6), std(col)); l.geometry.translate(0, -len / 2, 0); l.position.set(x, len, z); model.add(l); legs.push(l); return l; };
+  const add = (geo, col, x, y, z, sx = 1, sy = 1, sz = 1) => { const m = mesh(geo, std(col)); m.position.set(x, y, z); m.scale.set(sx, sy, sz); model.add(m); return m; };
+  const eyes = (y, z, w = 0.14) => { for (const sd of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), basic('#ffe066')); e.position.set(sd * w, y, z); model.add(e); } };
+  let size = 1;
+  if (kind === 'centaur') {
+    add(new THREE.SphereGeometry(0.5, 12, 10), '#8a5a3a', 0, 0.95, -0.2, 0.8, 0.7, 1.4);
+    [[-0.25, 0.3], [0.25, 0.3], [-0.25, -0.7], [0.25, -0.7]].forEach(([x, z]) => leg(x, z, '#6b4429', 0.75));
+    add(new THREE.CylinderGeometry(0.28, 0.33, 0.8, 10), '#a0704a', 0, 1.6, 0.45);
+    add(new THREE.SphereGeometry(0.26, 12, 10), '#a0704a', 0, 2.15, 0.5); eyes(2.2, 0.72, 0.1);
+    for (const sd of [-1, 1]) { const h = add(new THREE.ConeGeometry(0.07, 0.4, 6), '#e8e0c8', sd * 0.18, 2.42, 0.5); h.rotation.z = -sd * 0.5; }
+    size = 1.15;
+  } else if (kind === 'wolf') {
+    add(new THREE.SphereGeometry(0.45, 12, 10), '#8d939c', 0, 0.75, 0, 0.75, 0.75, 1.4);
+    [[-0.2, 0.35], [0.2, 0.35], [-0.2, -0.35], [0.2, -0.35]].forEach(([x, z]) => leg(x, z, '#6f757e', 0.5, 0.08));
+    add(new THREE.SphereGeometry(0.3, 12, 10), '#a2a8b0', 0, 1.05, 0.65);
+    add(new THREE.ConeGeometry(0.14, 0.4, 8), '#a2a8b0', 0, 1.0, 0.95).rotation.x = Math.PI / 2;
+    for (const sd of [-1, 1]) add(new THREE.ConeGeometry(0.09, 0.28, 6), '#6f757e', sd * 0.15, 1.38, 0.6);
+    eyes(1.12, 0.88, 0.12); size = 0.95;
+  } else if (kind === 'satyr') {
+    add(new THREE.CylinderGeometry(0.3, 0.35, 0.8, 10), '#7a5a8a', 0, 1.25, 0);
+    leg(-0.16, 0, '#4d3a2a', 0.85); leg(0.16, 0, '#4d3a2a', 0.85);
+    add(new THREE.SphereGeometry(0.28, 12, 10), '#b58a6a', 0, 1.9, 0.05); eyes(1.95, 0.3, 0.1);
+    for (const sd of [-1, 1]) { const h = add(new THREE.TorusGeometry(0.16, 0.05, 6, 10, Math.PI * 1.2), '#e0d4b0', sd * 0.2, 2.15, 0); h.rotation.y = Math.PI / 2; }
+  } else if (kind === 'ogre') {
+    add(new THREE.SphereGeometry(0.65, 14, 12), '#6f8fb0', 0, 1.15, 0, 1, 1.05, 0.9);
+    leg(-0.28, 0, '#4f6a86', 0.55, 0.16); leg(0.28, 0, '#4f6a86', 0.55, 0.16);
+    add(new THREE.SphereGeometry(0.28, 12, 10), '#86a6c4', 0, 1.95, 0.2); eyes(2.0, 0.45, 0.1);
+    const club = add(new THREE.CylinderGeometry(0.08, 0.2, 1.1, 8), '#7a5434', 0.75, 1.1, 0.2); club.rotation.z = 0.5;
+    size = 1.25;
+  } else { // hellbear
+    add(new THREE.SphereGeometry(0.6, 14, 12), '#6b2a2a', 0, 1.0, 0, 1, 1, 1.1);
+    [[-0.3, 0.35], [0.3, 0.35], [-0.3, -0.35], [0.3, -0.35]].forEach(([x, z]) => leg(x, z, '#4a1c1c', 0.45, 0.14));
+    add(new THREE.SphereGeometry(0.36, 12, 10), '#7d3333', 0, 1.6, 0.5);
+    for (const sd of [-1, 1]) add(new THREE.SphereGeometry(0.12, 8, 6), '#4a1c1c', sd * 0.26, 1.92, 0.45);
+    eyes(1.68, 0.82, 0.13); size = 1.2;
+  }
+  // Chen's "Holy Persuasion" glow under each creep
+  const ringM = new THREE.Mesh(new THREE.RingGeometry(0.6, 0.8, 32), new THREE.MeshBasicMaterial({ color: '#9dffb0', transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+  ringM.rotation.x = -Math.PI / 2; ringM.position.y = 0.05; root.add(ringM);
+  root.scale.setScalar(size); scene.add(root);
+  return { root, model, legs, walkT: Math.random() * 10, kind };
+}
+function updateVasily(h, dt) {
+  let moving = false;
+  if (h.moveTo) {
+    const d = moveToward(h, h.moveTo, h.speed, dt); moving = true;
+    if (d < 0.3) { h.moveTo = null; h.idleT = rand(1, 2.5); }
+  } else {
+    h.idleT -= dt;
+    if (h.idleT <= 0) { const a = rand(0, TAU), r = rand(8, 20); h.moveTo = V(Math.cos(a) * r, 0, Math.sin(a) * r); }
+  }
+  animWalk(h, moving, dt);
+  h.lineT = (h.lineT ?? 1) - dt;
+  if (h.lineT <= 0) { h.lineT = rand(3.5, 6); floatText(pick(CHEN_LINES), h.root.position.clone().add(V(0, 4.4, 0)), '#ff9a9a', 0.62, 2.4, 0.6); }
+  // the creeps follow in a line, doing absolutely nothing
+  let lead = h.root.position;
+  chenCreeps.forEach(c => {
+    const d = c.root.position.distanceTo(lead), gap = 1.9, mv = d > gap;
+    if (mv) moveToward(c, lead, Math.min(h.speed * 1.6, (d - gap) * 4 + 1), dt);
+    c.walkT += dt * (mv ? 10 : 2);
+    const sw = mv ? Math.sin(c.walkT) * 0.6 : 0; c.legs.forEach((l, j) => l.rotation.x = j % 2 ? -sw : sw);
+    c.model.position.y = mv ? Math.abs(Math.sin(c.walkT)) * 0.08 : 0;
+    const r = Math.hypot(c.root.position.x, c.root.position.z); if (r < 3.8) c.root.position.multiplyScalar(3.8 / r);
+    lead = c.root.position;
+  });
+  h.creepT = (h.creepT ?? 3) - dt;
+  if (h.creepT <= 0 && chenCreeps.length) { h.creepT = rand(3, 5.5); const c = pick(chenCreeps); floatText(pick(CREEP_LINES), c.root.position.clone().add(V(0, 3.0, 0)), '#d4ff6b', 0.56, 2.6, 0.5); }
+  const r = Math.hypot(h.root.position.x, h.root.position.z); if (r < 3.6) h.root.position.multiplyScalar(3.6 / r);
+}
+
 function updateAlly(h, dt) {
   if (h.support) return updateArina(h, dt);
+  if (h.chen) return updateVasily(h, dt);
   if (h.target && (!h.target.alive || h.target.root.position.length() > h.leash + 6)) h.target = null;
   if (!h.target) { h.idleT -= dt; if (h.idleT <= 0) { h.idleT = 0.3; const c = nearestCat(h.root.position, 26); if (c && c.root.position.length() < h.leash + 4) h.target = c; } }
   let moving = false;
@@ -1003,7 +1086,7 @@ function updateAlly(h, dt) {
   }
   animWalk(h, moving, dt);
   if (h.hop > 0) { h.hop -= dt; h.model.position.y += Math.sin((0.25 - h.hop) / 0.25 * Math.PI) * 0.5; }
-  if (h.quips.length && Math.random() < dt * 0.02) floatText(pick(h.quips), h.root.position.clone().add(V(0, 4, 0)), '#ffffff', 0.45, 1.6, 0.8);
+  if (h.quips.length && Math.random() < dt * 0.09) floatText(pick(h.quips), h.root.position.clone().add(V(0, 4.2, 0)), h.name === 'Sung Min' ? '#9fd0ff' : h.name === 'Sung Jin' ? '#ffd29a' : '#ffffff', 0.58, 2.2, 0.7);
   const r = Math.hypot(h.root.position.x, h.root.position.z); if (r < 3.6) h.root.position.multiplyScalar(3.6 / r);
 }
 
@@ -1182,6 +1265,7 @@ function blowCandles() {
 let fwT = 0;
 function updateWin(dt) {
   S.winT += dt;
+  chenCreeps.forEach((c, i) => { c.walkT += dt * 8; c.model.position.y = Math.max(0, Math.sin(c.walkT + i)) * 0.5; });
   [player, ...allies].forEach((h, i) => { h.walkT += dt * 8; h.model.position.y = Math.max(0, Math.sin(h.walkT + i)) * 0.6; if (h.arms) { h.arms[0].rotation.z = 2.6 + Math.sin(h.walkT) * 0.3; h.arms[1].rotation.z = -2.6 - Math.sin(h.walkT) * 0.3; } });
   decorCats.forEach((c, i) => { c.tail.rotation.z = Math.sin(S.t * 3 + i) * 0.6; if (Math.random() < dt * 0.15) { floatText(pick(['мяу ❤', '야옹 ❤', 'purrr ❤', 'meow ❤']), c.root.position.clone().add(V(0, 2.8, 0)), '#ffb3e1', 0.5); meow(0.08, 1.3, 0.4); } });
   fwT -= dt;
@@ -1243,6 +1327,7 @@ function clearWorld() {
   for (const arr of [cats, decorCats]) { arr.forEach(c => scene.remove(c.root)); arr.length = 0; }
   [...projs.map(p => p.m), ...parts.map(p => p.m), ...floats.map(f => f.s), ...rings.map(r => r.m), ...helpers.map(h => h.root)].forEach(o => scene.remove(o));
   wards.forEach(w => scene.remove(w.root)); wards.length = 0;
+  chenCreeps.forEach(c => scene.remove(c.root)); chenCreeps.length = 0;
   projs.length = parts.length = floats.length = rings.length = helpers.length = 0;
   if (player) scene.remove(player.root); allies.forEach(a => scene.remove(a.root));
   flames.forEach(f => f.visible = true);
@@ -1292,7 +1377,7 @@ async function boot() {
     [faces.sung.toDataURL(), 'Sungkun', 'Birthday boy. Carry.'],
     [faces.hyung.toDataURL(), 'Sung Min', 'Big brother'],
     [faces.dong.toDataURL(), 'Sung Jin', 'Little brother'],
-    [faces.vasya.toDataURL(), 'Vasily', '"Babushka". Davai davai!'],
+    [faces.vasya.toDataURL(), 'Vasily', '"Babushka". Chen player. Zero damage.'],
     [stitchCanvas.toDataURL(), 'Stitch', 'Ohana means family'],
     [faces.arina.toDataURL(), 'Arina', 'Support. Buys ALL the wards.'],
     [grogCanvas.toDataURL(), 'Grogu', 'Ultimate ability'],
