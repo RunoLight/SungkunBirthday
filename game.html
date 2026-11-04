@@ -400,7 +400,7 @@ function buildWorld() {
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
   // the river (it's Dota, there has to be a river)
-  const river = new THREE.Mesh(new THREE.PlaneGeometry(9, 200), new THREE.MeshStandardMaterial({ color: '#4aa6dc', roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.9 }));
+  const river = new THREE.Mesh(new THREE.PlaneGeometry(9, 200), new THREE.MeshStandardMaterial({ color: '#4aa6dc', roughness: 0.15, metalness: 0.1 }));
   river.rotation.x = -Math.PI / 2; river.rotation.z = Math.PI / 4; river.position.y = 0.03; river.receiveShadow = true; scene.add(river);
   // stone platform for the cake
   const plat = mesh(new THREE.CylinderGeometry(6.5, 7, 0.5, 40), std('#b9b2a6')); plat.position.y = 0.25; scene.add(plat);
@@ -486,7 +486,7 @@ function makeHumanoid({ shirt, pants, face, headSize = 1.8, cape = false, scale 
     const c = mesh(new THREE.CylinderGeometry(0.55, 1.0, 1.7, 18, 1, true, Math.PI / 2 - 0.35, Math.PI + 0.7), std('#efe5cc', { side: THREE.DoubleSide }));
     c.position.y = 1.15; model.add(c);
   }
-  const head = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(face), transparent: true }));
+  const head = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(face), transparent: true, alphaTest: 0.5 }));
   head.scale.set(headSize, headSize, 1); head.position.y = 1.95 + headSize * 0.42; root.add(head);
   if (nameTag) { const tg = textSprite(nameTag, { size: 44, color: tagColor }, 0.45); tg.position.y = head.position.y + headSize * 0.62; root.add(tg); }
   const sh = new THREE.Mesh(new THREE.CircleGeometry(0.6, 16), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.25 }));
@@ -639,7 +639,7 @@ function makeCat(type, pos) {
     const paw = mesh(new THREE.SphereGeometry(0.1, 8, 6), std('#ffffff')); paw.position.y = -0.48; l.add(paw);
   }
   const tail = mesh(new THREE.CylinderGeometry(0.07, 0.05, 1.0, 6), fur); tail.geometry.translate(0, 0.5, 0); tail.position.set(0, 0.8, -0.65); tail.rotation.x = -0.7; model.add(tail);
-  const face = new THREE.Sprite(new THREE.SpriteMaterial({ map: type === 'boss' ? faces.bossT : faces.catT, transparent: true }));
+  const face = new THREE.Sprite(new THREE.SpriteMaterial({ map: type === 'boss' ? faces.bossT : faces.catT, transparent: true, alphaTest: 0.5 }));
   face.scale.set(1.35, 1.35, 1); face.position.set(0, 1.35, 0.25); root.add(face);
   if (type === 'screamer' || type === 'boss') {
     const glow = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.95, 32), new THREE.MeshBasicMaterial({ color: '#ff3b3b', transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
