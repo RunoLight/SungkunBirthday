@@ -651,6 +651,7 @@ function makeCat(type, pos) {
   if (type !== 'boss') root.add(barBg, bar); else bar.visible = false;
   root.scale.setScalar(T.scale); root.position.copy(pos); scene.add(root);
   const c = { type, T, root, model, legs, tail, face, bar, barBg, hp: T.hp, maxHp: T.hp, vel: V(), y: 0, vy: 0, stun: 0, lev: 0, levDmg: 0, atkT: rand(0, 1), meowT: rand(1, 6), walkT: Math.random() * 10, alive: true, hitT: 0, spawnT: 7, megaT: 10 };
+  c.model.rotation.y = Math.atan2(-pos.x, -pos.z); placeCatFace(c);
   cats.push(c);
   return c;
 }
@@ -1090,6 +1091,12 @@ function updateAlly(h, dt) {
   const r = Math.hypot(h.root.position.x, h.root.position.z); if (r < 3.6) h.root.position.multiplyScalar(3.6 / r);
 }
 
+// the head sprite lives outside the rotating body, so keep it over the front of the body
+function placeCatFace(c, bob = 0) {
+  const a = c.model.rotation.y, fwd = 0.55;
+  c.face.position.set(Math.sin(a) * fwd, 1.35 + bob, Math.cos(a) * fwd);
+}
+
 const MEOWS = ['MEOW!', 'MEOW!!!', 'МЯУ!', '야옹!', 'MRRAOW', 'meow?'];
 function updateCat(c, dt) {
   c.walkT += dt * 12;
@@ -1128,7 +1135,7 @@ function updateCat(c, dt) {
   c.legs[0].rotation.x = sw; c.legs[3].rotation.x = sw; c.legs[1].rotation.x = -sw; c.legs[2].rotation.x = -sw;
   c.tail.rotation.z = Math.sin(c.walkT * 0.4) * 0.5;
   c.model.position.y = moving ? Math.abs(Math.sin(c.walkT)) * 0.06 : 0;
-  c.face.position.y = 1.35 + (moving ? Math.abs(Math.sin(c.walkT)) * 0.06 : 0);
+  placeCatFace(c, moving ? Math.abs(Math.sin(c.walkT)) * 0.06 : 0);
   if (c.bar) c.bar.scale.x = 1.04 * Math.max(0, c.hp / c.maxHp);
   // the meowing. constant meowing.
   c.meowT -= dt;
@@ -1247,7 +1254,7 @@ function win() {
   for (let i = 0; i < 7; i++) {
     const a = i / 7 * TAU, c = makeCat(i === 3 ? 'screamer' : 'cat', V(Math.cos(a) * 9.5, 0, Math.sin(a) * 9.5));
     cats.pop(); decorCats.push(c); c.root.remove(c.bar, c.barBg); c.model.rotation.y = Math.atan2(-c.root.position.x, -c.root.position.z);
-    c.model.rotation.x = -0.35;
+    c.model.rotation.x = -0.35; placeCatFace(c, 0.1);
   }
   setTimeout(() => {
     $('#win').classList.remove('hidden');
